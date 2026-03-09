@@ -1,19 +1,18 @@
+import { useState } from 'react'
 import ScienceIcon from '@mui/icons-material/Science'
+import { useNavigate, useParams } from 'react-router-dom'
 import { Button, Stack } from '@mui/material'
 import Page from '../components/common/Page'
 import TestChatDrawer from '../components/common/TestChatDrawer'
-import InstructionTable, {
-  type InstructionRow,
-} from '../components/dashboard/InstructionTable'
-import { useState } from 'react'
-import { overviewPanels } from '../data/dashboard'
+import InstructionTable from '../components/dashboard/InstructionTable'
+import { eventRows } from '../data/dashboard'
+import { appRoutes, resolveAiAgentId } from '../data/routes'
 
 function EventsPage() {
+  const { aiAgentId } = useParams<{ aiAgentId: string }>()
+  const navigate = useNavigate()
   const [isTestDrawerOpen, setIsTestDrawerOpen] = useState(false)
-  const eventRows: InstructionRow[] = overviewPanels[2].items.map((item, index) => ({
-    id: `event-${index}`,
-    content: item.title,
-  }))
+  const resolvedAiAgentId = resolveAiAgentId(aiAgentId)
 
   return (
     <>
@@ -34,6 +33,9 @@ function EventsPage() {
         <InstructionTable
           rows={eventRows}
           nameHeader="Name"
+          onEdit={(row) =>
+            navigate(appRoutes.ai.aiAgentEventEdit(row.id, resolvedAiAgentId))
+          }
           showDelete={false}
         />
       </Page>

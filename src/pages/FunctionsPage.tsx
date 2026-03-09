@@ -1,15 +1,18 @@
 import { useState } from 'react'
 import ScienceIcon from '@mui/icons-material/Science'
 import { Box, Button, Link, Stack, Typography } from '@mui/material'
-import { Link as RouterLink, useNavigate } from 'react-router-dom'
+import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom'
 import Page from '../components/common/Page'
 import TestChatDrawer from '../components/common/TestChatDrawer'
 import InstructionTable from '../components/dashboard/InstructionTable'
 import { functionRows } from '../data/dashboard'
+import { appRoutes, resolveAiAgentId } from '../data/routes'
 
 function FunctionsPage() {
+  const { aiAgentId } = useParams<{ aiAgentId: string }>()
   const [isTestDrawerOpen, setIsTestDrawerOpen] = useState(false)
   const navigate = useNavigate()
+  const resolvedAiAgentId = resolveAiAgentId(aiAgentId)
 
   return (
     <>
@@ -37,7 +40,11 @@ function FunctionsPage() {
         </Box>
 
         <Box sx={{ mt: -1 }}>
-          <Button component={RouterLink} to="/ai-agent/functions/new" variant="contained">
+          <Button
+            component={RouterLink}
+            to={appRoutes.ai.aiAgentFunctionNew(resolvedAiAgentId)}
+            variant="contained"
+          >
             New Function
           </Button>
         </Box>
@@ -47,7 +54,9 @@ function FunctionsPage() {
             rows={functionRows}
             nameHeader="Name"
             secondaryHeader="Used in Topics"
-            onEdit={(row) => navigate(`/ai-agent/functions/${row.id}/edit`)}
+            onEdit={(row) =>
+              navigate(appRoutes.ai.aiAgentFunctionEdit(row.id, resolvedAiAgentId))
+            }
             footer={
               <Box
                 sx={{

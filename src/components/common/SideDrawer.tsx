@@ -17,6 +17,13 @@ function SideDrawer({ open, title, onClose, children, width, titleActions }: Sid
       anchor="right"
       open={open}
       onClose={onClose}
+      transitionDuration={{ enter: 360, exit: 240 }}
+      ModalProps={{ keepMounted: true }}
+      slotProps={{
+        transition: {
+          appear: true,
+        },
+      }}
       PaperProps={{
         sx: {
           width: width ?? { xs: '100%', lg: 960 },

@@ -6,15 +6,17 @@ import Page from '../components/common/Page'
 import TestChatDrawer from '../components/common/TestChatDrawer'
 import FunctionForm from '../components/functions/FunctionForm'
 import { functionDefinitions } from '../data/dashboard'
+import { appRoutes, resolveAiAgentId } from '../data/routes'
 
 function EditFunctionPage() {
-  const { functionId } = useParams<{ functionId: string }>()
+  const { aiAgentId, functionId } = useParams<{ aiAgentId: string; functionId: string }>()
   const [isTestDrawerOpen, setIsTestDrawerOpen] = useState(false)
+  const resolvedAiAgentId = resolveAiAgentId(aiAgentId)
 
   const functionDefinition = functionDefinitions.find((item) => item.id === functionId)
 
   if (!functionDefinition) {
-    return <Navigate to="/ai-agent/functions" replace />
+    return <Navigate to={appRoutes.ai.aiAgentFunctions(resolvedAiAgentId)} replace />
   }
 
   return (

@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useRef } from 'react'
 import FlagOutlinedIcon from '@mui/icons-material/FlagOutlined'
 import UndoOutlinedIcon from '@mui/icons-material/UndoOutlined'
 import RedoOutlinedIcon from '@mui/icons-material/RedoOutlined'
@@ -13,23 +13,28 @@ import StarBorderOutlinedIcon from '@mui/icons-material/StarBorderOutlined'
 import SellOutlinedIcon from '@mui/icons-material/SellOutlined'
 import PlaceOutlinedIcon from '@mui/icons-material/PlaceOutlined'
 import OpenInNewOutlinedIcon from '@mui/icons-material/OpenInNewOutlined'
-import { Box, IconButton, Stack, Typography } from '@mui/material'
+import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded'
+import { Box, IconButton, Stack, Tooltip, Typography } from '@mui/material'
 import {
   Background,
   type Connection,
+  type FinalConnectionState,
   type Edge,
   type Node,
   type NodeProps,
   type NodeTypes,
   type OnConnect,
+  type OnConnectEnd,
   type OnNodesChange,
   type OnEdgesChange,
   Panel,
   Position,
   ReactFlow,
+  ReactFlowProvider,
   addEdge,
   useEdgesState,
   useNodesState,
+  useReactFlow,
   Handle,
   MarkerType,
 } from '@xyflow/react'
@@ -51,25 +56,103 @@ type ActionNodeData = {
   linkLabel: string
 }
 
-function StartNode({ data }: NodeProps<Node<StartNodeData>>) {
+const workflowEdgeStyle = {
+  type: 'smoothstep' as const,
+  animated: false,
+  style: {
+    stroke: '#c7d2e0',
+    strokeWidth: 2,
+  },
+  markerEnd: {
+    type: MarkerType.ArrowClosed,
+    width: 18,
+    height: 18,
+    color: '#c7d2e0',
+  },
+}
+
+function createWorkflowEdge(
+  id: string,
+  connection: {
+    source: string
+    target: string
+    sourceHandle?: string | null
+    targetHandle?: string | null
+  },
+): Edge {
+  return {
+    id,
+    ...connection,
+    ...workflowEdgeStyle,
+  }
+}
+
+function createActionNode(id: string, position: { x: number; y: number }): Node<ActionNodeData> {
+  return {
+    id,
+    type: 'action',
+    position,
+    data: {
+      badge: 'NEW',
+      title: 'New action',
+      description: 'Configure next step',
+      linkLabel: 'Set up',
+    } satisfies ActionNodeData,
+    draggable: true,
+    selected: true,
+  }
+}
+
+function SourceHandle({ visible }: { visible: boolean }) {
+  return (
+    <Tooltip title="Drag to connect to the next action." placement="right" arrow>
+      <Handle
+        type="source"
+        position={Position.Right}
+        style={{
+          width: 24,
+          height: 24,
+          right: -13,
+          top: '50%',
+          transform: 'translateY(-50%)',
+          borderRadius: '50%',
+          border: '2px solid #ffffff',
+          background: '#2db64d',
+          color: '#ffffff',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 6px 14px rgba(45, 182, 77, 0.22)',
+          opacity: visible ? 1 : 0,
+          pointerEvents: visible ? 'all' : 'none',
+          transition: 'opacity 0.2s ease',
+        }}
+      >
+        <ChevronRightRoundedIcon sx={{ fontSize: 16 }} />
+      </Handle>
+    </Tooltip>
+  )
+}
+
+function StartNode({ data, selected }: NodeProps<Node<StartNodeData>>) {
   return (
     <Box sx={{ position: 'relative' }}>
-      <Handle type="source" position={Position.Right} style={{ opacity: 0 }} />
+      <SourceHandle visible={selected} />
       <Box
         sx={{
-          width: 92,
-          px: 1.5,
-          py: 1,
+          width: 62,
+          px: 0.75,
+          py: 0.6,
           bgcolor: 'common.white',
-          borderRadius: 1.5,
+          borderRadius: 1.25,
           border: '1px solid',
           borderColor: 'divider',
           boxShadow: '0 6px 16px rgba(15, 23, 42, 0.06)',
           textAlign: 'center',
         }}
       >
-        <FlagOutlinedIcon sx={{ color: '#7cb342', fontSize: 28 }} />
-        <Typography variant="body2" sx={{ mt: 0.5, fontWeight: 700 }}>
+        <FlagOutlinedIcon sx={{ color: '#7cb342', fontSize: 18 }} />
+        <Typography variant="body2" sx={{ mt: 0.2, fontWeight: 700, fontSize: 11.5 }}>
           {data.title}
         </Typography>
       </Box>
@@ -77,27 +160,27 @@ function StartNode({ data }: NodeProps<Node<StartNodeData>>) {
   )
 }
 
-function MessageNode({ data }: NodeProps<Node<MessageNodeData>>) {
+function MessageNode({ data, selected }: NodeProps<Node<MessageNodeData>>) {
   return (
     <Box sx={{ position: 'relative' }}>
       <Handle type="target" position={Position.Left} style={{ opacity: 0 }} />
-      <Handle type="source" position={Position.Right} style={{ opacity: 0 }} />
+      <SourceHandle visible={selected} />
       <Box
         sx={{
-          width: 230,
+          width: 154,
           bgcolor: 'common.white',
-          borderRadius: 2,
+          borderRadius: 1.5,
           border: '1px solid',
           borderColor: 'divider',
           boxShadow: '0 12px 28px rgba(15, 23, 42, 0.08)',
           overflow: 'hidden',
         }}
       >
-        <Stack direction="row" spacing={1.25} alignItems="center" sx={{ p: 1.5, pb: 1 }}>
+        <Stack direction="row" spacing={0.8} alignItems="center" sx={{ p: 0.9, pb: 0.6 }}>
           <Box
             sx={{
-              width: 32,
-              height: 32,
+              width: 22,
+              height: 22,
               borderRadius: 1,
               bgcolor: '#00a0e9',
               color: 'common.white',
@@ -105,39 +188,45 @@ function MessageNode({ data }: NodeProps<Node<MessageNodeData>>) {
               alignItems: 'center',
               justifyContent: 'center',
               fontWeight: 700,
-              fontSize: 20,
+              fontSize: 13,
             }}
           >
             T
           </Box>
-          <Typography variant="body2" sx={{ fontWeight: 700 }}>
+          <Typography variant="body2" sx={{ fontWeight: 700, fontSize: 11.5 }}>
             {data.title}
           </Typography>
         </Stack>
-        <Box sx={{ px: 1.5, pb: 1.5 }}>
+        <Box sx={{ px: 0.9, pb: 0.9 }}>
           <Box
             sx={{
-              p: 1.25,
-              borderRadius: 1.5,
+              p: 0.75,
+              borderRadius: 1.25,
               border: '1px solid',
               borderColor: 'divider',
               bgcolor: '#ffffff',
-              minHeight: 106,
+              minHeight: 58,
             }}
           >
-            <Typography variant="body2" sx={{ color: 'text.primary', lineHeight: 1.45 }}>
+            <Typography
+              variant="body2"
+              sx={{ color: 'text.primary', lineHeight: 1.35, fontSize: 11 }}
+            >
               {data.message}
             </Typography>
             <Box
               sx={{
-                mt: 2,
+                mt: 0.9,
                 borderTop: '1px dashed',
                 borderColor: 'divider',
-                pt: 1.5,
+                pt: 0.7,
                 textAlign: 'center',
               }}
             >
-              <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+              <Typography
+                variant="body2"
+                sx={{ color: 'text.secondary', fontWeight: 600, fontSize: 10.5 }}
+              >
                 + New Link
               </Typography>
             </Box>
@@ -148,48 +237,54 @@ function MessageNode({ data }: NodeProps<Node<MessageNodeData>>) {
   )
 }
 
-function ActionNode({ data }: NodeProps<Node<ActionNodeData>>) {
+function ActionNode({ data, selected }: NodeProps<Node<ActionNodeData>>) {
   return (
     <Box sx={{ position: 'relative' }}>
       <Handle type="target" position={Position.Left} style={{ opacity: 0 }} />
+      <SourceHandle visible={selected} />
       <Box
         sx={{
-          width: 215,
+          width: 146,
           bgcolor: 'common.white',
-          borderRadius: 2,
+          borderRadius: 1.5,
           border: '1px solid',
           borderColor: 'divider',
           boxShadow: '0 12px 28px rgba(15, 23, 42, 0.08)',
           overflow: 'hidden',
         }}
       >
-        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ p: 1.5, pb: 1 }}>
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+          sx={{ p: 0.9, pb: 0.6 }}
+        >
           <Stack direction="row" spacing={1} alignItems="center">
             <Box
               sx={{
-                px: 0.75,
-                py: 0.25,
+                px: 0.45,
+                py: 0.15,
                 borderRadius: 1,
                 bgcolor: '#4c6fff',
                 color: 'common.white',
-                fontSize: 12,
+                fontSize: 9,
                 fontWeight: 700,
               }}
             >
               {data.badge}
             </Box>
-            <Typography variant="body2" sx={{ fontWeight: 700 }}>
+            <Typography variant="body2" sx={{ fontWeight: 700, fontSize: 11.5 }}>
               {data.title}
             </Typography>
           </Stack>
-          <OpenInNewOutlinedIcon sx={{ color: 'text.secondary', fontSize: 18 }} />
+          <OpenInNewOutlinedIcon sx={{ color: 'text.secondary', fontSize: 14 }} />
         </Stack>
-        <Stack spacing={2} alignItems="center" sx={{ px: 2, pb: 2.5, pt: 1 }}>
+        <Stack spacing={1} alignItems="center" sx={{ px: 1, pb: 1.2, pt: 0.5 }}>
           <Box
             sx={{
-              width: 92,
-              height: 78,
-              borderRadius: 2,
+              width: 58,
+              height: 48,
+              borderRadius: 1.5,
               border: '1px dashed',
               borderColor: 'divider',
               bgcolor: '#fafbff',
@@ -197,7 +292,7 @@ function ActionNode({ data }: NodeProps<Node<ActionNodeData>>) {
               alignItems: 'center',
               justifyContent: 'center',
               color: '#4c6fff',
-              fontSize: 24,
+              fontSize: 16,
               fontWeight: 700,
             }}
           >
@@ -205,11 +300,11 @@ function ActionNode({ data }: NodeProps<Node<ActionNodeData>>) {
           </Box>
           <Typography
             variant="body1"
-            sx={{ textAlign: 'center', fontWeight: 700, maxWidth: 150 }}
+            sx={{ textAlign: 'center', fontWeight: 700, maxWidth: 108, fontSize: 11.5 }}
           >
             {data.description}
           </Typography>
-          <Typography variant="body2" color="primary.main" sx={{ fontWeight: 600 }}>
+          <Typography variant="body2" color="primary.main" sx={{ fontWeight: 600, fontSize: 10.5 }}>
             {data.linkLabel}
           </Typography>
         </Stack>
@@ -314,29 +409,76 @@ function WorkflowToolButton({ children }: { children: React.ReactNode }) {
   )
 }
 
-function TopicWorkflowPlaceholder() {
-  const [nodes, , onNodesChange] = useNodesState(initialNodes)
+function TopicWorkflowCanvas() {
+  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes)
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges)
+  const { screenToFlowPosition } = useReactFlow()
+  const nextGeneratedNodeIdRef = useRef(1)
+  const nextGeneratedEdgeIdRef = useRef(initialEdges.length + 1)
 
   const onConnect = useCallback<OnConnect>(
-    (params: Connection) =>
+    (params: Connection) => {
+      if (!params.source || !params.target) {
+        return
+      }
+
       setEdges((currentEdges) =>
         addEdge(
-          {
-            ...params,
-            type: 'smoothstep',
-            style: { stroke: '#c7d2e0', strokeWidth: 2 },
-            markerEnd: {
-              type: MarkerType.ArrowClosed,
-              width: 18,
-              height: 18,
-              color: '#c7d2e0',
-            },
-          },
+          createWorkflowEdge(`workflow-edge-${nextGeneratedEdgeIdRef.current++}`, params),
           currentEdges,
         ),
-      ),
+      )
+    },
     [setEdges],
+  )
+
+  const onConnectEnd = useCallback<OnConnectEnd>(
+    (event: MouseEvent | TouchEvent, connectionState: FinalConnectionState) => {
+      if (connectionState.isValid || !connectionState.fromNode?.id) {
+        return
+      }
+
+      const target = event.target
+
+      if (!(target instanceof Element) || !target.closest('.react-flow__pane')) {
+        return
+      }
+
+      const point =
+        'changedTouches' in event ? event.changedTouches[0] : event
+
+      const sourceNode = nodes.find((node) => node.id === connectionState.fromNode?.id)
+
+      if (!sourceNode) {
+        return
+      }
+
+      const flowPosition = screenToFlowPosition({
+        x: point.clientX,
+        y: point.clientY,
+      })
+
+      const newNodeId = `generated-action-${nextGeneratedNodeIdRef.current++}`
+      const newNode = createActionNode(newNodeId, {
+        x: Math.max(flowPosition.x, sourceNode.position.x + 220),
+        y: flowPosition.y - 36,
+      })
+
+      setNodes((currentNodes) => [
+        ...currentNodes.map((node) => ({ ...node, selected: false })),
+        { ...newNode, selected: true },
+      ])
+      setEdges((currentEdges) =>
+        addEdge(
+          createWorkflowEdge(`workflow-edge-${nextGeneratedEdgeIdRef.current++}`, {
+            source: sourceNode.id,
+            target: newNodeId,
+          }),
+          currentEdges,
+        ),
+      )
+    },
+    [nodes, screenToFlowPosition, setEdges, setNodes],
   )
 
   const flowNodes = useMemo(() => nodes, [nodes])
@@ -363,11 +505,12 @@ function TopicWorkflowPlaceholder() {
         onNodesChange={handleNodesChange}
         onEdgesChange={handleEdgesChange}
         onConnect={onConnect}
+        onConnectEnd={onConnectEnd}
         nodeTypes={nodeTypes}
         fitView
-        fitViewOptions={{ padding: 0.16 }}
+        fitViewOptions={{ padding: 0.22, maxZoom: 0.78 }}
         minZoom={0.4}
-        maxZoom={1.6}
+        maxZoom={1.2}
         proOptions={{ hideAttribution: true }}
         nodesDraggable
       >
@@ -454,6 +597,14 @@ function TopicWorkflowPlaceholder() {
         </Panel>
       </ReactFlow>
     </Box>
+  )
+}
+
+function TopicWorkflowPlaceholder() {
+  return (
+    <ReactFlowProvider>
+      <TopicWorkflowCanvas />
+    </ReactFlowProvider>
   )
 }
 

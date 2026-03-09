@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import DataObjectOutlinedIcon from '@mui/icons-material/DataObjectOutlined'
-import { Link as RouterLink } from 'react-router-dom'
+import { Link as RouterLink, useParams } from 'react-router-dom'
 import {
   Box,
   Button,
@@ -28,6 +28,7 @@ import type {
   FunctionInputRow,
   FunctionOutputRow,
 } from '../../data/dashboard'
+import { appRoutes, resolveAiAgentId } from '../../data/routes'
 
 type FunctionFormProps = {
   initialValues: FunctionFormValues
@@ -63,6 +64,7 @@ const reorderRows = <T,>(rows: T[], fromIndex: number, toIndex: number) => {
 }
 
 function FunctionForm({ initialValues }: FunctionFormProps) {
+  const { aiAgentId } = useParams<{ aiAgentId: string }>()
   const [name, setName] = useState(initialValues.name)
   const [description, setDescription] = useState(initialValues.description)
   const [authorizationRequired, setAuthorizationRequired] = useState(
@@ -81,6 +83,7 @@ function FunctionForm({ initialValues }: FunctionFormProps) {
     initialValues.outputs.map(cloneOutputRow),
   )
   const [dynamicInfoTargetIndex, setDynamicInfoTargetIndex] = useState<number | null>(null)
+  const resolvedAiAgentId = resolveAiAgentId(aiAgentId)
 
   const updateInputRow = <K extends keyof FunctionInputRow>(
     index: number,
@@ -433,7 +436,11 @@ function FunctionForm({ initialValues }: FunctionFormProps) {
       <Stack direction="row" spacing={2} sx={{ pt: 1 }}>
         <Button variant="contained">Save</Button>
         <Button variant="outlined">Save &amp; Test</Button>
-        <Button component={RouterLink} to="/ai-agent/functions" variant="outlined">
+        <Button
+          component={RouterLink}
+          to={appRoutes.ai.aiAgentFunctions(resolvedAiAgentId)}
+          variant="outlined"
+        >
           Cancel
         </Button>
       </Stack>

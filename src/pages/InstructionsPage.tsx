@@ -20,7 +20,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import { Link as RouterLink } from 'react-router-dom'
+import { Link as RouterLink, useParams } from 'react-router-dom'
 import Page from '../components/common/Page'
 import SideDrawer from '../components/common/SideDrawer'
 import TestChatDrawer from '../components/common/TestChatDrawer'
@@ -30,12 +30,14 @@ import {
   instructionTemplates,
   type InstructionTemplate,
 } from '../data/dashboard'
+import { appRoutes, resolveAiAgentId } from '../data/routes'
 import type { InstructionRow } from '../components/dashboard/InstructionTable'
 
 type DrawerView = 'templates' | 'form' | null
 const maxInstructions = 20
 
 function InstructionsPage() {
+  const { aiAgentId } = useParams<{ aiAgentId: string }>()
   const [rows, setRows] = useState<InstructionRow[]>(initialInstructionRows)
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null)
   const [drawerView, setDrawerView] = useState<DrawerView>(null)
@@ -44,6 +46,7 @@ function InstructionsPage() {
   const [editingInstructionId, setEditingInstructionId] = useState<string | null>(null)
   const [instructionPendingDelete, setInstructionPendingDelete] =
     useState<InstructionRow | null>(null)
+  const resolvedAiAgentId = resolveAiAgentId(aiAgentId)
 
   const isMenuOpen = Boolean(menuAnchor)
   const isDrawerOpen = drawerView !== null
@@ -144,7 +147,7 @@ function InstructionsPage() {
         titleSuffix={
           <Button
             component={RouterLink}
-            to="/ai-agent/overview"
+            to={appRoutes.ai.aiAgentOverview(resolvedAiAgentId)}
             variant="text"
             startIcon={<ArrowBackOutlinedIcon />}
           >

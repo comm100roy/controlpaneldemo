@@ -1,4 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type MouseEvent } from 'react'
+import PublicOutlinedIcon from '@mui/icons-material/PublicOutlined'
+import MenuBookOutlinedIcon from '@mui/icons-material/MenuBookOutlined'
+import CloudOutlinedIcon from '@mui/icons-material/CloudOutlined'
 import ScienceIcon from '@mui/icons-material/Science'
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined'
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined'
@@ -9,15 +12,23 @@ import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined'
 import ToggleOnOutlinedIcon from '@mui/icons-material/ToggleOnOutlined'
 import ToggleOffOutlinedIcon from '@mui/icons-material/ToggleOffOutlined'
+import EditNoteOutlinedIcon from '@mui/icons-material/EditNoteOutlined'
 import {
   Box,
+  ButtonBase,
   Button,
+  Divider,
   Link,
   MenuItem,
+  Popover,
   Stack,
   TextField,
   Typography,
 } from '@mui/material'
+import NewFileContentDrawer from '../components/knowledge/NewFileContentDrawer'
+import NewKbArticleContentDrawer from '../components/knowledge/NewKbArticleContentDrawer'
+import NewSnippetContentDrawer from '../components/knowledge/NewSnippetContentDrawer'
+import NewWebpageContentDrawer from '../components/knowledge/NewWebpageContentDrawer'
 import Page from '../components/common/Page'
 import TestChatDrawer from '../components/common/TestChatDrawer'
 import InstructionTable, {
@@ -29,9 +40,75 @@ import { knowledgeRows as initialKnowledgeRows, type KnowledgeRow } from '../dat
 
 function KnowledgePage() {
   const [isTestDrawerOpen, setIsTestDrawerOpen] = useState(false)
+  const [newContentAnchorEl, setNewContentAnchorEl] = useState<HTMLElement | null>(null)
+  const [isNewFileDrawerOpen, setIsNewFileDrawerOpen] = useState(false)
+  const [isNewKbArticleDrawerOpen, setIsNewKbArticleDrawerOpen] = useState(false)
+  const [isNewSnippetDrawerOpen, setIsNewSnippetDrawerOpen] = useState(false)
+  const [isNewWebpageDrawerOpen, setIsNewWebpageDrawerOpen] = useState(false)
   const [selectedType, setSelectedType] = useState('All')
   const [searchValue, setSearchValue] = useState('')
   const [rows, setRows] = useState<KnowledgeRow[]>(initialKnowledgeRows)
+
+  const newContentOptions = [
+    {
+      label: 'Webpage',
+      description: 'Support inputting URL to import associated webpages',
+      icon: <PublicOutlinedIcon sx={{ color: '#546e7a', fontSize: 27 }} />,
+    },
+    {
+      label: 'KB Article',
+      description: 'Supported products: Comm100 KB, Confluence Cloud, ServiceNow',
+      icon: <MenuBookOutlinedIcon sx={{ color: '#546e7a', fontSize: 26 }} />,
+    },
+    {
+      label: 'Cloud File',
+      description: 'Supported products: SharePoint Online, Google Drive',
+      icon: <CloudOutlinedIcon sx={{ color: '#546e7a', fontSize: 27 }} />,
+    },
+    {
+      label: 'File',
+      description: 'Supported formats: docx, html, md, pdf, txt',
+      icon: <DescriptionOutlinedIcon sx={{ color: '#546e7a', fontSize: 27 }} />,
+    },
+    {
+      label: 'Snippet',
+      description: 'Q&A pairs that support editing',
+      icon: <EditNoteOutlinedIcon sx={{ color: '#546e7a', fontSize: 27 }} />,
+    },
+  ] as const
+
+  const isNewContentPopoverOpen = Boolean(newContentAnchorEl)
+
+  const handleOpenNewContentPopover = (event: MouseEvent<HTMLElement>) => {
+    setNewContentAnchorEl(event.currentTarget)
+  }
+
+  const handleCloseNewContentPopover = () => {
+    setNewContentAnchorEl(null)
+  }
+
+  const handleSelectNewContentOption = (optionLabel: (typeof newContentOptions)[number]['label']) => {
+    handleCloseNewContentPopover()
+
+    if (optionLabel === 'Webpage') {
+      setIsNewWebpageDrawerOpen(true)
+      return
+    }
+
+    if (optionLabel === 'KB Article') {
+      setIsNewKbArticleDrawerOpen(true)
+      return
+    }
+
+    if (optionLabel === 'File') {
+      setIsNewFileDrawerOpen(true)
+      return
+    }
+
+    if (optionLabel === 'Snippet') {
+      setIsNewSnippetDrawerOpen(true)
+    }
+  }
 
   const stats = useMemo(
     () => [
@@ -205,7 +282,9 @@ function KnowledgePage() {
         <StatsGrid title="Data Sources:" stats={stats} />
 
         <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mt: -1 }}>
-          <Button variant="contained">New Content</Button>
+          <Button variant="contained" onClick={handleOpenNewContentPopover}>
+            New Content
+          </Button>
           <Stack direction="row" spacing={1.5}>
             <TextField
               select
@@ -241,6 +320,66 @@ function KnowledgePage() {
           </Stack>
         </Stack>
 
+        <Popover
+          open={isNewContentPopoverOpen}
+          anchorEl={newContentAnchorEl}
+          onClose={handleCloseNewContentPopover}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+          transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+          slotProps={{
+            paper: {
+              sx: {
+                mt: 0.5,
+                width: 316,
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 1,
+                boxShadow: '0 8px 24px rgba(15, 23, 42, 0.12)',
+                overflow: 'hidden',
+              },
+            },
+          }}
+        >
+          <Stack divider={<Divider />}>
+            {newContentOptions.map((option) => (
+              <ButtonBase
+                key={option.label}
+                onClick={() => handleSelectNewContentOption(option.label)}
+                sx={{
+                  display: 'flex',
+                  width: '100%',
+                  textAlign: 'left',
+                  justifyContent: 'flex-start',
+                  px: 1.75,
+                  py: 1.5,
+                  bgcolor: 'common.white',
+                  '&:hover': {
+                    bgcolor: '#f3f5f7',
+                  },
+                }}
+              >
+                <Stack direction="row" spacing={1.5} alignItems="flex-start">
+                  <Box sx={{ pt: 0.2, flexShrink: 0 }}>{option.icon}</Box>
+                  <Stack spacing={0.25}>
+                    <Typography
+                      variant="body2"
+                      sx={{ color: '#263238', fontWeight: 700, lineHeight: 1.25 }}
+                    >
+                      {option.label}
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      sx={{ color: 'text.secondary', lineHeight: 1.35, maxWidth: 238 }}
+                    >
+                      {option.description}
+                    </Typography>
+                  </Stack>
+                </Stack>
+              </ButtonBase>
+            ))}
+          </Stack>
+        </Popover>
+
         <Box sx={{ mt: -1.5 }}>
           <InstructionTable
             rows={filteredRows}
@@ -265,6 +404,22 @@ function KnowledgePage() {
           />
         </Box>
       </Page>
+      <NewWebpageContentDrawer
+        open={isNewWebpageDrawerOpen}
+        onClose={() => setIsNewWebpageDrawerOpen(false)}
+      />
+      <NewKbArticleContentDrawer
+        open={isNewKbArticleDrawerOpen}
+        onClose={() => setIsNewKbArticleDrawerOpen(false)}
+      />
+      <NewFileContentDrawer
+        open={isNewFileDrawerOpen}
+        onClose={() => setIsNewFileDrawerOpen(false)}
+      />
+      <NewSnippetContentDrawer
+        open={isNewSnippetDrawerOpen}
+        onClose={() => setIsNewSnippetDrawerOpen(false)}
+      />
       <TestChatDrawer
         open={isTestDrawerOpen}
         onClose={() => setIsTestDrawerOpen(false)}

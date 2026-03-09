@@ -1,72 +1,336 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation, useParams } from 'react-router-dom'
 import AppShell from './components/layout/AppShell'
+import { defaultAiAgentId } from './data/aiAgents'
 import { productSnapshots } from './data/dashboard'
+import {
+  appRoutes,
+  legacyRoutes,
+  level1Segments,
+  productDashboardPath,
+} from './data/routes'
 import DashboardPage from './pages/DashboardPage'
+import EditEventPage from './pages/EditEventPage'
 import EditFunctionPage from './pages/EditFunctionPage'
 import EditTopicPage from './pages/EditTopicPage'
 import EventsPage from './pages/EventsPage'
 import FunctionsPage from './pages/FunctionsPage'
 import InstructionsPage from './pages/InstructionsPage'
 import KnowledgePage from './pages/KnowledgePage'
-import LearningPage from './pages/LearningPage'
 import NewFunctionPage from './pages/NewFunctionPage'
 import OverviewPage from './pages/OverviewPage'
 import ProductPage from './pages/ProductPage'
+import ThumbsDownAnswersPage from './pages/ThumbsDownAnswersPage'
 import TopicsPage from './pages/TopicsPage'
+import UnansweredQuestionsPage from './pages/UnansweredQuestionsPage'
+
+const placeholderRoutes = [
+  {
+    root: `/${level1Segments.livechat}`,
+    dashboard: productDashboardPath(level1Segments.livechat),
+    snapshot: productSnapshots.livechat,
+  },
+  {
+    root: `/${level1Segments.ticketing}`,
+    dashboard: productDashboardPath(level1Segments.ticketing),
+    snapshot: productSnapshots.ticketing,
+  },
+  {
+    root: `/${level1Segments.voice}`,
+    dashboard: productDashboardPath(level1Segments.voice),
+    snapshot: productSnapshots.voice,
+  },
+  {
+    root: `/${level1Segments.outreach}`,
+    dashboard: productDashboardPath(level1Segments.outreach),
+    snapshot: productSnapshots.outreach,
+  },
+  {
+    root: `/${level1Segments.queue}`,
+    dashboard: productDashboardPath(level1Segments.queue),
+    snapshot: productSnapshots.queue,
+  },
+  {
+    root: `/${level1Segments.booking}`,
+    dashboard: productDashboardPath(level1Segments.booking),
+    snapshot: productSnapshots.booking,
+  },
+  {
+    root: `/${level1Segments.knowledgebase}`,
+    dashboard: productDashboardPath(level1Segments.knowledgebase),
+    snapshot: productSnapshots.knowledgebase,
+  },
+  {
+    root: `/${level1Segments.contact}`,
+    dashboard: productDashboardPath(level1Segments.contact),
+    snapshot: productSnapshots.contact,
+  },
+  {
+    root: `/${level1Segments.report}`,
+    dashboard: productDashboardPath(level1Segments.report),
+    snapshot: productSnapshots.report,
+  },
+  {
+    root: `/${level1Segments.globalsettings}`,
+    dashboard: productDashboardPath(level1Segments.globalsettings),
+    snapshot: productSnapshots.globalsettings,
+  },
+  {
+    root: `/${level1Segments.integrations}`,
+    dashboard: productDashboardPath(level1Segments.integrations),
+    snapshot: productSnapshots.integrations,
+  },
+]
+
+function LegacyAiAgentRedirect() {
+  const location = useLocation()
+  const legacySuffix = location.pathname.slice(legacyRoutes.aiAgentPrefix.length)
+  const nextPath =
+    legacySuffix.length === 0 || legacySuffix === '/'
+      ? appRoutes.ai.aiAgentOverview(defaultAiAgentId)
+      : `${appRoutes.ai.aiAgentRoot}/${defaultAiAgentId}${legacySuffix}`
+
+  return (
+    <Navigate to={`${nextPath}${location.search}${location.hash}`} replace />
+  )
+}
+
+function AiAgentSectionRedirect({ to }: { to: (aiAgentId: string) => string }) {
+  const { aiAgentId } = useParams<{ aiAgentId: string }>()
+
+  return <Navigate to={to(aiAgentId ?? defaultAiAgentId)} replace />
+}
+
+function DefaultAiAgentPathRedirect() {
+  const location = useLocation()
+  const match = location.pathname.match(
+    /^\/ai\/aiagent\/(overview|knowledge|topics|events|functions|learning)$/,
+  )
+  const nextPath = match
+    ? `${appRoutes.ai.aiAgentRoot}/${defaultAiAgentId}/${match[1]}`
+    : appRoutes.ai.aiAgentOverview(defaultAiAgentId)
+
+  return <Navigate to={nextPath} replace />
+}
+
+function DefaultAiAgentInstructionsRedirect() {
+  return <Navigate to={appRoutes.ai.aiAgentInstructions(defaultAiAgentId)} replace />
+}
+
+function AiAgentInstructionsRedirect() {
+  const { aiAgentId } = useParams<{ aiAgentId: string }>()
+
+  return <Navigate to={appRoutes.ai.aiAgentInstructions(aiAgentId ?? defaultAiAgentId)} replace />
+}
+
+function DefaultAiAgentEditRedirect() {
+  const location = useLocation()
+  const topicMatch = location.pathname.match(/^\/ai\/aiagent\/topics\/([^/]+)\/edit$/)
+  if (topicMatch) {
+    return <Navigate to={appRoutes.ai.aiAgentTopicEdit(topicMatch[1], defaultAiAgentId)} replace />
+  }
+
+  const eventMatch = location.pathname.match(/^\/ai\/aiagent\/events\/([^/]+)\/edit$/)
+  if (eventMatch) {
+    return <Navigate to={appRoutes.ai.aiAgentEventEdit(eventMatch[1], defaultAiAgentId)} replace />
+  }
+
+  const functionMatch = location.pathname.match(/^\/ai\/aiagent\/functions\/([^/]+)\/edit$/)
+  if (functionMatch) {
+    return (
+      <Navigate
+        to={appRoutes.ai.aiAgentFunctionEdit(functionMatch[1], defaultAiAgentId)}
+        replace
+      />
+    )
+  }
+
+  return <Navigate to={appRoutes.ai.aiAgentOverview(defaultAiAgentId)} replace />
+}
 
 function App() {
   return (
     <Routes>
       <Route element={<AppShell />}>
-        <Route index element={<Navigate to="/dashboard" replace />} />
-        <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/ai-agent/overview" element={<OverviewPage />} />
-        <Route path="/ai-agent/knowledge" element={<KnowledgePage />} />
-        <Route path="/ai-agent/topics" element={<TopicsPage />} />
-        <Route path="/ai-agent/topics/:topicId/edit" element={<EditTopicPage />} />
-        <Route path="/ai-agent/events" element={<EventsPage />} />
-        <Route path="/ai-agent/functions" element={<FunctionsPage />} />
-        <Route path="/ai-agent/functions/new" element={<NewFunctionPage />} />
-        <Route path="/ai-agent/functions/:functionId/edit" element={<EditFunctionPage />} />
-        <Route path="/ai-agent/learning" element={<LearningPage />} />
-        <Route path="/ai-agent/instructions" element={<InstructionsPage />} />
+        <Route index element={<Navigate to={appRoutes.home} replace />} />
         <Route
-          path="/ai-copilot"
+          path={legacyRoutes.dashboard}
+          element={<Navigate to={appRoutes.ai.dashboard} replace />}
+        />
+        <Route
+          path={appRoutes.ai.root}
+          element={<Navigate to={appRoutes.ai.dashboard} replace />}
+        />
+        <Route path={appRoutes.ai.dashboard} element={<DashboardPage />} />
+        <Route
+          path={appRoutes.ai.aiAgentRoot}
+          element={<Navigate to={appRoutes.ai.aiAgentOverview(defaultAiAgentId)} replace />}
+        />
+        <Route
+          path={`${appRoutes.ai.aiAgentRoot}/overview`}
+          element={<DefaultAiAgentPathRedirect />}
+        />
+        <Route
+          path={`${appRoutes.ai.aiAgentRoot}/knowledge`}
+          element={<DefaultAiAgentPathRedirect />}
+        />
+        <Route
+          path={`${appRoutes.ai.aiAgentRoot}/topics`}
+          element={<DefaultAiAgentPathRedirect />}
+        />
+        <Route
+          path={`${appRoutes.ai.aiAgentRoot}/events`}
+          element={<DefaultAiAgentPathRedirect />}
+        />
+        <Route
+          path={`${appRoutes.ai.aiAgentRoot}/functions`}
+          element={<DefaultAiAgentPathRedirect />}
+        />
+        <Route
+          path={`${appRoutes.ai.aiAgentRoot}/functions/new`}
+          element={<Navigate to={appRoutes.ai.aiAgentFunctionNew(defaultAiAgentId)} replace />}
+        />
+        <Route
+          path={`${appRoutes.ai.aiAgentRoot}/learning`}
+          element={<DefaultAiAgentPathRedirect />}
+        />
+        <Route
+          path={`${appRoutes.ai.aiAgentRoot}/instructions`}
+          element={<DefaultAiAgentInstructionsRedirect />}
+        />
+        <Route
+          path={`${appRoutes.ai.aiAgentRoot}/:aiAgentId/instructions`}
+          element={<AiAgentInstructionsRedirect />}
+        />
+        <Route
+          path={`${appRoutes.ai.aiAgentRoot}/topics/:topicId/edit`}
+          element={<DefaultAiAgentEditRedirect />}
+        />
+        <Route
+          path={`${appRoutes.ai.aiAgentRoot}/events/:eventId/edit`}
+          element={<DefaultAiAgentEditRedirect />}
+        />
+        <Route
+          path={`${appRoutes.ai.aiAgentRoot}/functions/:functionId/edit`}
+          element={<DefaultAiAgentEditRedirect />}
+        />
+        <Route
+          path={appRoutes.ai.aiAgentBasePattern}
+          element={<AiAgentSectionRedirect to={appRoutes.ai.aiAgentOverview} />}
+        />
+        <Route path={appRoutes.ai.aiAgentOverviewPattern} element={<OverviewPage />} />
+        <Route path={appRoutes.ai.aiAgentKnowledgePattern} element={<KnowledgePage />} />
+        <Route path={appRoutes.ai.aiAgentTopicsPattern} element={<TopicsPage />} />
+        <Route
+          path={appRoutes.ai.aiAgentTopicEditPattern}
+          element={<EditTopicPage />}
+        />
+        <Route path={appRoutes.ai.aiAgentEventsPattern} element={<EventsPage />} />
+        <Route
+          path={appRoutes.ai.aiAgentEventEditPattern}
+          element={<EditEventPage />}
+        />
+        <Route path={appRoutes.ai.aiAgentFunctionsPattern} element={<FunctionsPage />} />
+        <Route path={appRoutes.ai.aiAgentFunctionNewPattern} element={<NewFunctionPage />} />
+        <Route
+          path={appRoutes.ai.aiAgentFunctionEditPattern}
+          element={<EditFunctionPage />}
+        />
+        <Route
+          path={appRoutes.ai.aiAgentLearningPattern}
           element={
-            <ProductPage
-              title={productSnapshots.aiCopilot.title}
-              description={productSnapshots.aiCopilot.description}
+            <AiAgentSectionRedirect
+              to={appRoutes.ai.aiAgentLearningUnansweredQuestions}
             />
           }
         />
         <Route
-          path="/ai-insights"
+          path={appRoutes.ai.aiAgentLearningUnansweredQuestionsPattern}
+          element={<UnansweredQuestionsPage />}
+        />
+        <Route
+          path={appRoutes.ai.aiAgentLearningThumbsDownAnswersPattern}
+          element={<ThumbsDownAnswersPage />}
+        />
+        <Route
+          path={appRoutes.ai.aiAgentInstructionsPattern}
+          element={<InstructionsPage />}
+        />
+        <Route
+          path={appRoutes.ai.aiCopilot}
           element={
             <ProductPage
-              title={productSnapshots.aiInsights.title}
-              description={productSnapshots.aiInsights.description}
+              title={productSnapshots.aicopilot.title}
+              description={productSnapshots.aicopilot.description}
             />
           }
         />
         <Route
-          path="/task-bot"
+          path={appRoutes.ai.aiInsights}
           element={
             <ProductPage
-              title={productSnapshots.taskBot.title}
-              description={productSnapshots.taskBot.description}
+              title={productSnapshots.aiinsights.title}
+              description={productSnapshots.aiinsights.description}
             />
           }
         />
         <Route
-          path="/voice-bot"
+          path={appRoutes.ai.taskBot}
           element={
             <ProductPage
-              title={productSnapshots.voiceBot.title}
-              description={productSnapshots.voiceBot.description}
+              title={productSnapshots.taskbot.title}
+              description={productSnapshots.taskbot.description}
             />
           }
         />
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        <Route
+          path={appRoutes.ai.voiceBot}
+          element={
+            <ProductPage
+              title={productSnapshots.voicebot.title}
+              description={productSnapshots.voicebot.description}
+            />
+          }
+        />
+        {placeholderRoutes.map((route) => (
+          <Route
+            key={route.dashboard}
+            path={route.root}
+            element={<Navigate to={route.dashboard} replace />}
+          />
+        ))}
+        {placeholderRoutes.map((route) => (
+          <Route
+            key={`${route.dashboard}-page`}
+            path={route.dashboard}
+            element={
+              <ProductPage
+                title={route.snapshot.title}
+                description={route.snapshot.description}
+              />
+            }
+          />
+        ))}
+        <Route
+          path={`${legacyRoutes.aiAgentPrefix}/*`}
+          element={<LegacyAiAgentRedirect />}
+        />
+        <Route
+          path={legacyRoutes.aiCopilot}
+          element={<Navigate to={appRoutes.ai.aiCopilot} replace />}
+        />
+        <Route
+          path={legacyRoutes.aiInsights}
+          element={<Navigate to={appRoutes.ai.aiInsights} replace />}
+        />
+        <Route
+          path={legacyRoutes.taskBot}
+          element={<Navigate to={appRoutes.ai.taskBot} replace />}
+        />
+        <Route
+          path={legacyRoutes.voiceBot}
+          element={<Navigate to={appRoutes.ai.voiceBot} replace />}
+        />
+        <Route path="*" element={<Navigate to={appRoutes.home} replace />} />
       </Route>
     </Routes>
   )

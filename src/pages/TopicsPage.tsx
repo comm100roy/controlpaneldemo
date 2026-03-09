@@ -23,7 +23,7 @@ import {
   useMediaQuery,
   useTheme,
 } from '@mui/material'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import Page from '../components/common/Page'
 import SideDrawer from '../components/common/SideDrawer'
 import CategoryForm, {
@@ -40,6 +40,7 @@ import {
   type TopicCategory,
   type TopicRow,
 } from '../data/dashboard'
+import { appRoutes, resolveAiAgentId } from '../data/routes'
 
 type TopicTreeItemProps = {
   node: TopicCategory
@@ -373,7 +374,9 @@ function TopicTreeItem({
 function TopicsPage() {
   const theme = useTheme()
   const isDesktop = useMediaQuery(theme.breakpoints.up('lg'))
+  const { aiAgentId } = useParams<{ aiAgentId: string }>()
   const navigate = useNavigate()
+  const resolvedAiAgentId = resolveAiAgentId(aiAgentId)
   const layoutRef = useRef<HTMLDivElement | null>(null)
   const [isTestDrawerOpen, setIsTestDrawerOpen] = useState(false)
   const [searchValue, setSearchValue] = useState('')
@@ -676,7 +679,9 @@ function TopicsPage() {
               rows={visibleRows}
               nameHeader="Name"
               secondaryHeader="Answer Type"
-              onEdit={(row) => navigate(`/ai-agent/topics/${row.id}/edit`)}
+              onEdit={(row) =>
+                navigate(appRoutes.ai.aiAgentTopicEdit(row.id, resolvedAiAgentId))
+              }
               onDelete={handleDeleteTopic}
               footer={
                 <Box

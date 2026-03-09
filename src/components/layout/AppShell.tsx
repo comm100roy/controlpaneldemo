@@ -10,7 +10,7 @@ import {
 } from '@mui/material'
 import SidebarNav from '../sidebar/SidebarNav'
 
-const drawerWidth = 280
+const drawerWidth = 320
 
 function AppShell() {
   const theme = useTheme()

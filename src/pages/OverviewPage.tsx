@@ -1,20 +1,61 @@
 import { useState } from 'react'
 import ScienceIcon from '@mui/icons-material/Science'
 import { Button, Grid, Stack } from '@mui/material'
+import { Link as RouterLink, useParams } from 'react-router-dom'
+import EditAiAgentDrawer from '../components/dashboard/EditAiAgentDrawer'
 import Page from '../components/common/Page'
 import TestChatDrawer from '../components/common/TestChatDrawer'
 import AgentOverviewCard from '../components/dashboard/AgentOverviewCard'
 import OverviewHighlightPanel from '../components/dashboard/OverviewHighlightPanel'
 import StatsGrid from '../components/dashboard/StatsGrid'
+import { getAiAgentRecord } from '../data/aiAgents'
 import {
   agentProfile,
   knowledgeStats,
   lowerMetrics,
   overviewPanels,
 } from '../data/dashboard'
+import { appRoutes, resolveAiAgentId } from '../data/routes'
 
 function OverviewPage() {
+  const { aiAgentId } = useParams<{ aiAgentId: string }>()
   const [isTestDrawerOpen, setIsTestDrawerOpen] = useState(false)
+  const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false)
+  const [editDrawerSession, setEditDrawerSession] = useState(0)
+  const resolvedAiAgentId = resolveAiAgentId(aiAgentId)
+  const selectedAiAgent = getAiAgentRecord(resolvedAiAgentId)
+
+  const resolvedAgentProfile = {
+    ...agentProfile,
+    description:
+      selectedAiAgent.subtitle || agentProfile.description,
+    profile: [
+      { label: 'Name', value: selectedAiAgent.name },
+      { label: 'Language', value: selectedAiAgent.language },
+      { label: 'Description', value: selectedAiAgent.subtitle },
+    ],
+    status: [
+      { label: 'Channel', value: selectedAiAgent.channelLabel },
+      {
+        label: 'Publish Status',
+        value:
+          selectedAiAgent.channelCount > 0
+            ? `Published in ${selectedAiAgent.channelCount} ${selectedAiAgent.channelLabel} Campaigns`
+            : 'Not published yet',
+      },
+      agentProfile.status[2],
+    ],
+  }
+
+  const resolvedLowerMetrics = lowerMetrics.map((metric) =>
+    metric.title === 'Functions'
+      ? { ...metric, countHref: appRoutes.ai.aiAgentFunctions(resolvedAiAgentId) }
+      : metric,
+  )
+
+  const agentName = resolvedAgentProfile.profile[0]?.value ?? selectedAiAgent.name
+  const agentLanguage = selectedAiAgent.language
+  const agentChannel = selectedAiAgent.channelLabel
 
   return (
     <>
@@ -34,7 +75,20 @@ function OverviewPage() {
       >
         <Grid container spacing={3}>
           <Grid size={{ xs: 12 }}>
-            <AgentOverviewCard {...agentProfile} />
+            <AgentOverviewCard
+              {...resolvedAgentProfile}
+              action={
+                <Button
+                  variant="outlined"
+                  onClick={() => {
+                    setEditDrawerSession((current) => current + 1)
+                    setIsEditDrawerOpen(true)
+                  }}
+                >
+                  Edit
+                </Button>
+              }
+            />
           </Grid>
 
           <Grid size={{ xs: 12 }}>
@@ -42,7 +96,15 @@ function OverviewPage() {
               title="Knowledge"
               description="Data sources used to train your AI Agent for accurate and relevant responses."
               stats={knowledgeStats}
-              actions={<Button variant="outlined">Manage</Button>}
+              actions={
+                <Button
+                  component={RouterLink}
+                  to={appRoutes.ai.aiAgentKnowledge(resolvedAiAgentId)}
+                  variant="outlined"
+                >
+                  Manage
+                </Button>
+              }
             />
           </Grid>
 
@@ -53,7 +115,7 @@ function OverviewPage() {
               alertMessage={overviewPanels[0].items[0]?.description}
               count={overviewPanels[0].count}
               countLabel="Topics"
-              countHref="/ai-agent/topics"
+              countHref={appRoutes.ai.aiAgentTopics(resolvedAiAgentId)}
             />
           </Grid>
           <Grid size={{ xs: 12, lg: 4 }}>
@@ -63,7 +125,7 @@ function OverviewPage() {
               alertMessage={overviewPanels[1].items[0]?.description}
               count={overviewPanels[1].count}
               countLabel="Instructions"
-              countHref="/ai-agent/instructions"
+              countHref={appRoutes.ai.aiAgentInstructions(resolvedAiAgentId)}
             />
           </Grid>
           <Grid size={{ xs: 12, lg: 4 }}>
@@ -74,7 +136,7 @@ function OverviewPage() {
             />
           </Grid>
 
-          {lowerMetrics.map((metric) => (
+          {resolvedLowerMetrics.map((metric) => (
             <Grid size={{ xs: 12, md: 3 }} key={metric.title}>
               <OverviewHighlightPanel
                 title={metric.title}
@@ -91,6 +153,15 @@ function OverviewPage() {
       <TestChatDrawer
         open={isTestDrawerOpen}
         onClose={() => setIsTestDrawerOpen(false)}
+      />
+      <EditAiAgentDrawer
+        key={editDrawerSession}
+        open={isEditDrawerOpen}
+        onClose={() => setIsEditDrawerOpen(false)}
+        initialName={agentName}
+        initialLanguage={agentLanguage}
+        initialChannel={agentChannel}
+        initialDescription={resolvedAgentProfile.description}
       />
     </>
   )

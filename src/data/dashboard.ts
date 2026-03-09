@@ -1,6 +1,7 @@
 import type { InfoPanelItem } from '../components/dashboard/InfoPanel'
 import type { InstructionRow } from '../components/dashboard/InstructionTable'
 import type { StatItem } from '../components/dashboard/StatsGrid'
+import { appRoutes } from './routes'
 
 export const agentProfile = {
   badge: 'Paid',
@@ -105,7 +106,7 @@ export const lowerMetrics = [
     value: 0,
     description: 'Functions that the AI Agent executes to complete specific tasks.',
     countLabel: 'Functions',
-    countHref: '/ai-agent/functions',
+    countHref: appRoutes.ai.aiAgentFunctions(),
   },
   {
     title: 'Learning',
@@ -521,6 +522,59 @@ export const topicRows: TopicRow[] = topicDefinitions.map((topic) => ({
   categoryId: topic.categoryId,
 }))
 
+export type EventDefinition = {
+  id: string
+  name: string
+  description: string
+  answerMode: TopicAnswerMode
+  naturalLanguageInstructions: string
+  functionIds: string[]
+}
+
+export const eventDefinitions: EventDefinition[] = [
+  {
+    id: 'visitor-starts-chat',
+    name: 'Event when a visitor starts a chat',
+    description: 'Send a welcome message and suggest the top support topics.',
+    answerMode: 'workflow',
+    naturalLanguageInstructions:
+      'Greet the visitor warmly, explain that the AI Agent can help, and suggest the most common support topics to get the conversation started.',
+    functionIds: [],
+  },
+  {
+    id: 'after-ai-agent-completes-answer',
+    name: 'Event after AI Agent completes an answer',
+    description: 'Offer next-best actions or a follow-up question.',
+    answerMode: 'natural-language',
+    naturalLanguageInstructions:
+      'After answering, ask a concise follow-up question or suggest the next best action to keep the conversation moving forward.',
+    functionIds: [],
+  },
+  {
+    id: 'cannot-answer-visitor-question',
+    name: 'Event when AI Agent cannot answer visitor question',
+    description: 'Escalate to human support or collect contact details.',
+    answerMode: 'natural-language',
+    naturalLanguageInstructions:
+      'Acknowledge the gap clearly, apologize briefly, and direct the visitor to a human agent or collect contact details for follow-up.',
+    functionIds: ['create-ticket'],
+  },
+  {
+    id: 'visitor-rates-answer-not-helpful',
+    name: 'Event when a visitor rates an answer as not helpful',
+    description: 'Trigger improvement review and create a learning task.',
+    answerMode: 'natural-language',
+    naturalLanguageInstructions:
+      'Thank the visitor for the feedback, offer another form of help, and route the interaction for review so the AI Agent can improve.',
+    functionIds: [],
+  },
+]
+
+export const eventRows: InstructionRow[] = eventDefinitions.map((eventDefinition) => ({
+  id: eventDefinition.id,
+  content: eventDefinition.name,
+}))
+
 export const learningItems: InfoPanelItem[] = [
   {
     title: 'Refund policy for yearly plans',
@@ -639,22 +693,77 @@ export const instructionTemplates: InstructionTemplate[] = [
 ]
 
 export const productSnapshots = {
-  aiCopilot: {
+  livechat: {
+    title: 'Live Chat',
+    description:
+      'Monitor live conversations, automation coverage, and handoff readiness across customer-facing chat experiences.',
+  },
+  ticketing: {
+    title: 'Ticketing & Messaging',
+    description:
+      'Review asynchronous support queues, message routing, and automation opportunities across ticket channels.',
+  },
+  voice: {
+    title: 'Voice',
+    description:
+      'Track voice workflows, prompt readiness, and escalation coverage for inbound and outbound conversations.',
+  },
+  outreach: {
+    title: 'Outreach',
+    description:
+      'Coordinate proactive campaigns, follow-up journeys, and response automation for outreach programs.',
+  },
+  queue: {
+    title: 'Queue',
+    description:
+      'Balance demand, priority, and staffing signals across the operational queue experience.',
+  },
+  booking: {
+    title: 'Booking',
+    description:
+      'Manage scheduling flows, meeting automation, and booking handoffs from conversational journeys.',
+  },
+  knowledgebase: {
+    title: 'Knowledge Base',
+    description:
+      'Measure content coverage, publishing readiness, and knowledge health for self-service experiences.',
+  },
+  contact: {
+    title: 'Contact',
+    description:
+      'Organize audience records, communication preferences, and customer contact readiness in one place.',
+  },
+  report: {
+    title: 'Report',
+    description:
+      'Track performance trends, operational risks, and product outcomes across the control panel.',
+  },
+  globalsettings: {
+    title: 'Global Settings',
+    description:
+      'Configure shared rules, workspace defaults, and cross-product operational settings.',
+  },
+  integrations: {
+    title: 'Integrations',
+    description:
+      'Manage connected systems, sync health, and configuration status across external platforms.',
+  },
+  aicopilot: {
     title: 'AI Copilot',
     description:
       'Assist internal agents with suggested replies, summaries, and workflow shortcuts during live conversations.',
   },
-  aiInsights: {
+  aiinsights: {
     title: 'AI Insights',
     description:
       'Monitor conversation trends, conversion signals, and operational gaps across all automation products.',
   },
-  taskBot: {
+  taskbot: {
     title: 'Task Bot',
     description:
       'Automate repeatable support and back-office tasks that can be triggered from AI Agent conversations.',
   },
-  voiceBot: {
+  voicebot: {
     title: 'Voice Bot',
     description:
       'Handle scripted outbound or inbound voice flows with consistent prompts and follow-up routing.',
