@@ -5,6 +5,23 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>controlpaneldemo</title>
+    <script>
+      ;(() => {
+        const redirectPath = sessionStorage.getItem('gh-pages-path')
+
+        if (!redirectPath) {
+          return
+        }
+
+        sessionStorage.removeItem('gh-pages-path')
+
+        const currentPath = `${window.location.pathname}${window.location.search}${window.location.hash}`
+
+        if (redirectPath !== currentPath) {
+          window.history.replaceState(null, '', redirectPath)
+        }
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>
