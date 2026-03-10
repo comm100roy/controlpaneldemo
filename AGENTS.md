@@ -121,6 +121,47 @@ If you are wiring a real backend:
 - AI Agent routes are parameterized by `aiAgentId`; many pages also fall back to `resolveAiAgentId()`.
 - Legacy redirects are handled in `src/App.tsx`; be careful when changing path shapes.
 
+### Route to menu mapping
+
+Use this table when tracing a visible sidebar/menu item back to its canonical route.
+
+| Menu level | Label | Canonical path |
+| --- | --- | --- |
+| Level 1 | Live Chat | `/ui/:siteId/livechat/dashboard` |
+| Level 1 | Ticketing & Messaging | `/ui/:siteId/ticketing/dashboard` |
+| Level 1 | Voice | `/ui/:siteId/voice/dashboard` |
+| Level 1 | AI | `/ui/:siteId/ai/dashboard` |
+| Level 2 under AI | Dashboard | `/ui/:siteId/ai/dashboard` |
+| Level 2 under AI | AI Agent | `/ui/:siteId/ai/aiagent/:aiAgentId/overview` |
+| Level 3 under AI Agent | Overview | `/ui/:siteId/ai/aiagent/:aiAgentId/overview` |
+| Level 3 under AI Agent | Knowledge | `/ui/:siteId/ai/aiagent/:aiAgentId/knowledge` |
+| Level 3 under AI Agent | Topics | `/ui/:siteId/ai/aiagent/:aiAgentId/topics` |
+| Level 3 under AI Agent | Events | `/ui/:siteId/ai/aiagent/:aiAgentId/events` |
+| Level 3 under AI Agent | Functions | `/ui/:siteId/ai/aiagent/:aiAgentId/functions` |
+| Level 3 under AI Agent | Unanswered Questions | `/ui/:siteId/ai/aiagent/:aiAgentId/learning/unanswered-questions` |
+| Level 3 under AI Agent | Thumbs Down Answers | `/ui/:siteId/ai/aiagent/:aiAgentId/learning/thumbs-down-answers` |
+| Level 2 under AI | AI Copilot | `/ui/:siteId/ai/aicopilot` |
+| Level 2 under AI | AI Insights | `/ui/:siteId/ai/aiinsights/sentiment-analysis` |
+| Level 3 under AI Insights | Sentiment Analysis | `/ui/:siteId/ai/aiinsights/sentiment-analysis` |
+| Level 3 under AI Insights | Spotlights | `/ui/:siteId/ai/aiinsights/spotlights` |
+| Level 3 under AI Insights | Chat Resolution Status | `/ui/:siteId/ai/aiinsights/chat-resolution-status` |
+| Level 2 under AI | Task Bot | `/ui/:siteId/ai/taskbot` |
+| Level 2 under AI | Voice Bot | `/ui/:siteId/ai/voicebot` |
+| Level 1 | Outreach | `/ui/:siteId/outreach/dashboard` |
+| Level 1 | Queue | `/ui/:siteId/queue/dashboard` |
+| Level 1 | Booking | `/ui/:siteId/booking/dashboard` |
+| Level 1 | Knowledge Base | `/ui/:siteId/knowledgebase/dashboard` |
+| Level 1 | Contact | `/ui/:siteId/contact/dashboard` |
+| Level 1 | Report | `/ui/:siteId/report/dashboard` |
+| Level 1 | Global Settings | `/ui/:siteId/globalsettings/dashboard` |
+| Level 1 | Integrations | `/ui/:siteId/integrations/dashboard` |
+
+Notes:
+
+- The mapping above is sourced from `src/data/navigation.tsx` and `src/data/routes.ts`.
+- Placeholder products currently land on `ProductPage` even though they still use dashboard-shaped paths.
+- `AI Agent` and `AI Insights` also have redirect-style parent routes in `src/App.tsx`, but menu links point to the concrete child pages above.
+
 ### Data flow
 
 - Some screens use API wrappers + MSW-backed CRUD state.
@@ -137,10 +178,8 @@ If you are wiring a real backend:
 
 These are current codebase realities worth knowing before making changes:
 
-1. `defaultAiAgentId` in `src/data/aiAgents.ts` is a fixed string (`eddy`), but `src/mocks/handlers/aiAgents.ts` reseeds agent ids with `crypto.randomUUID()`. `AppShell` works around this by redirecting invalid AI agent URLs to the first loaded agent.
-2. Function CRUD is API-backed in `src/pages/ai/aiagent/functions/**`, but topic/event answer editors still use static `functionDefinitions` from `src/data/dashboard.ts`. New or deleted functions do not automatically stay in sync there.
-3. Some edit screens expose save-like actions without persistence. Review the exact page before assuming a form is connected end-to-end.
-4. No automated test suite is configured yet. Validation is currently build + lint only.
+1. Some edit screens expose save-like actions without persistence. Review the exact page before assuming a form is connected end-to-end.
+2. No automated test suite is configured yet. Validation is currently build + lint only.
 
 Treat these as guardrails when making changes. If you normalize one side of a mismatch, update the other side in the same change.
 
@@ -167,12 +206,3 @@ When touching routing or mock CRUD flows, manually verify:
 - Node version in CI: 22
 - Pages build relies on Vite `base` being set from `GITHUB_REPOSITORY`
 - `public/404.html` is present to support SPA routing on GitHub Pages
-
-## External product context
-
-This repo does not include the backend database, but current project context says:
-
-- The AutoCoding database contains multiple schemas (`livechat`, `dbo`, `chatbot`, `ticketing`, `kb`, `booking`, `global`, etc.), and each schema maps to a product.
-- UI localization texts are stored in `t_AutoCoding_MultilingualText`.
-
-If future work adds backend or localization integration, keep that data model in mind.
