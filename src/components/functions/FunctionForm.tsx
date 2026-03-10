@@ -32,6 +32,8 @@ import { appRoutes, resolveAiAgentId } from '../../data/routes'
 
 type FunctionFormProps = {
   initialValues: FunctionFormValues
+  submitting?: boolean
+  onSubmit?: (values: FunctionFormValues) => void | Promise<void>
 }
 
 const cloneInputRow = (row: FunctionInputRow): FunctionInputRow => ({ ...row })
@@ -63,7 +65,7 @@ const reorderRows = <T,>(rows: T[], fromIndex: number, toIndex: number) => {
   return nextRows
 }
 
-function FunctionForm({ initialValues }: FunctionFormProps) {
+function FunctionForm({ initialValues, submitting = false, onSubmit }: FunctionFormProps) {
   const { aiAgentId } = useParams<{ aiAgentId: string }>()
   const [name, setName] = useState(initialValues.name)
   const [description, setDescription] = useState(initialValues.description)
@@ -128,6 +130,25 @@ function FunctionForm({ initialValues }: FunctionFormProps) {
 
     updateHeaderRow(dynamicInfoTargetIndex, 'value', value)
     setDynamicInfoTargetIndex(null)
+  }
+
+  const handleSubmit = () => {
+    if (!onSubmit) {
+      return
+    }
+
+    void onSubmit({
+      ...initialValues,
+      name: name.trim(),
+      description: description.trim(),
+      authorizationRequired,
+      method,
+      url: url.trim(),
+      inputs: inputRows.map(cloneInputRow),
+      headers: headerRows.map(cloneHeaderRow),
+      body,
+      outputs: outputRows.map(cloneOutputRow),
+    })
   }
 
   return (
@@ -434,12 +455,25 @@ function FunctionForm({ initialValues }: FunctionFormProps) {
       </CollapsibleSectionCard>
 
       <Stack direction="row" spacing={2} sx={{ pt: 1 }}>
-        <Button variant="contained">Save</Button>
-        <Button variant="outlined">Save &amp; Test</Button>
+        <Button
+          variant="contained"
+          onClick={handleSubmit}
+          disabled={submitting || name.trim().length === 0}
+        >
+          Save
+        </Button>
+        <Button
+          variant="outlined"
+          onClick={handleSubmit}
+          disabled={submitting || name.trim().length === 0}
+        >
+          Save &amp; Test
+        </Button>
         <Button
           component={RouterLink}
           to={appRoutes.ai.aiAgentFunctions(resolvedAiAgentId)}
           variant="outlined"
+          disabled={submitting}
         >
           Cancel
         </Button>

@@ -17,10 +17,11 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import AgentAvatar, {
+import AgentAvatar from '../common/AgentAvatar'
+import {
   agentAvatarPresets,
   type AgentAvatarVariantId,
-} from '../common/AgentAvatar'
+} from '../common/agentAvatarPresets'
 
 export type AiAgentFormValues = {
   name: string
