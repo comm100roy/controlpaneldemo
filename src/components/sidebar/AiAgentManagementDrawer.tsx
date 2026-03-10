@@ -24,7 +24,7 @@ import AiAgentForm, { type AiAgentFormValues } from '../dashboard/AiAgentForm'
 import DataTable, {
   type InstructionRow,
   type InstructionTableColumn,
-} from '../dashboard/DataTable'
+} from '../common/DataTable'
 import SideDrawer from '../common/SideDrawer'
 import {
   additionalPaidAiAgentsCount,

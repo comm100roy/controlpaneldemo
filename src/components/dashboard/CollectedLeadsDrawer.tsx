@@ -3,7 +3,7 @@ import SideDrawer from '../common/SideDrawer'
 import DataTable, {
   type InstructionRow,
   type InstructionTableColumn,
-} from './DataTable'
+} from '../common/DataTable'
 
 type CollectedLeadRow = InstructionRow & {
   email: string

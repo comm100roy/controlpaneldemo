@@ -32,7 +32,7 @@ import CategoryForm, {
 } from '../components/topics/CategoryForm'
 import DataTable, {
   type InstructionRow,
-} from '../components/dashboard/DataTable'
+} from '../components/common/DataTable'
 import TestChatDrawer from '../components/common/TestChatDrawer'
 import {
   topicCategories,

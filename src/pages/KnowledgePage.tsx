@@ -34,7 +34,7 @@ import TestChatDrawer from '../components/common/TestChatDrawer'
 import DataTable, {
   type InstructionTableBatchAction,
   type InstructionTableColumn,
-} from '../components/dashboard/DataTable'
+} from '../components/common/DataTable'
 import StatsGrid from '../components/dashboard/StatsGrid'
 import { knowledgeRows as initialKnowledgeRows, type KnowledgeRow } from '../data/dashboard'
 

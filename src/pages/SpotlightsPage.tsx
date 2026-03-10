@@ -18,7 +18,7 @@ import { AiInsightsInfoBanner } from '../components/common/AiInsightsElements'
 import DataTable, {
   type InstructionRow,
   type InstructionTableColumn,
-} from '../components/dashboard/DataTable'
+} from '../components/common/DataTable'
 import Page from '../components/common/Page'
 import { spotlightDefinitions, type SpotlightCampaign } from '../data/aiInsights'
 import { appRoutes } from '../data/routes'

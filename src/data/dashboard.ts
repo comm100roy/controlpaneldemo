@@ -1,5 +1,5 @@
 import type { InfoPanelItem } from '../components/dashboard/InfoPanel'
-import type { InstructionRow } from '../components/dashboard/DataTable'
+import type { InstructionRow } from '../components/common/DataTable'
 import type { StatItem } from '../components/dashboard/StatsGrid'
 import { appRoutes } from './routes'
 

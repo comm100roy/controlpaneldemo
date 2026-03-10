@@ -8,7 +8,7 @@ import SideDrawer from '../common/SideDrawer'
 import DataTable, {
   type InstructionRow,
   type InstructionTableColumn,
-} from './DataTable'
+} from '../common/DataTable'
 
 type DateRangeValue = [Dayjs | null, Dayjs | null]
 
