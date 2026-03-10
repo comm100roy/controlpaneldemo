@@ -5,21 +5,26 @@ import type { SpotlightFormValues } from '../../data/aiInsights'
 
 type SpotlightFormProps = {
   initialValues: SpotlightFormValues
-  onSave?: (values: SpotlightFormValues) => void
+  submitting?: boolean
+  onSave?: (values: SpotlightFormValues) => void | Promise<void>
   cancelTo: string
 }
 
-function SpotlightForm({ initialValues, onSave, cancelTo }: SpotlightFormProps) {
+function SpotlightForm({ initialValues, submitting = false, onSave, cancelTo }: SpotlightFormProps) {
   const navigate = useNavigate()
   const [name, setName] = useState(initialValues.name)
   const [description, setDescription] = useState(initialValues.description)
 
-  const handleSave = () => {
-    onSave?.({
+  const handleSave = async () => {
+    if (!onSave) {
+      navigate(cancelTo)
+      return
+    }
+
+    await onSave({
       name: name.trim(),
       description: description.trim(),
     })
-    navigate(cancelTo)
   }
 
   return (
@@ -50,12 +55,12 @@ function SpotlightForm({ initialValues, onSave, cancelTo }: SpotlightFormProps) 
       <Stack direction="row" spacing={2} sx={{ pt: 1 }}>
         <Button
           variant="contained"
-          onClick={handleSave}
-          disabled={name.trim().length === 0 || description.trim().length === 0}
+          onClick={() => void handleSave()}
+          disabled={submitting || name.trim().length === 0 || description.trim().length === 0}
         >
           Save
         </Button>
-        <Button variant="outlined" onClick={() => navigate(cancelTo)}>
+        <Button variant="outlined" onClick={() => navigate(cancelTo)} disabled={submitting}>
           Cancel
         </Button>
       </Stack>

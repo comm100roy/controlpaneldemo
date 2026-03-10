@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import ChatBubbleOutlineOutlinedIcon from '@mui/icons-material/ChatBubbleOutlineOutlined'
 import OpenInNewOutlinedIcon from '@mui/icons-material/OpenInNewOutlined'
 import {
+  Alert,
   Box,
   Button,
   Dialog,
@@ -9,33 +10,27 @@ import {
   DialogContent,
   DialogTitle,
   Link,
+  Snackbar,
   Stack,
   Tooltip,
   Typography,
 } from '@mui/material'
-import { Link as RouterLink, useNavigate } from 'react-router-dom'
+import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom'
+import { deleteSpotlight, getSpotlights } from '../../../../api/spotlights'
 import { AiInsightsInfoBanner } from '../../../../components/common/AiInsightsElements'
 import DataTable, {
   type InstructionRow,
   type InstructionTableColumn,
 } from '../../../../components/common/DataTable'
 import Page from '../../../../components/common/Page'
-import { spotlightDefinitions, type SpotlightCampaign } from '../../../../data/aiInsights'
-import { appRoutes } from '../../../../data/routes'
+import { type SpotlightCampaign, type SpotlightDefinition } from '../../../../data/aiInsights'
+import { appRoutes, getSiteIdFromPathname, resolveSiteId } from '../../../../data/routes'
 
 type SpotlightRow = InstructionRow & {
   description: string
   campaigns: SpotlightCampaign[]
   updatedBy: string
 }
-
-const initialSpotlightRows: SpotlightRow[] = spotlightDefinitions.map((spotlight) => ({
-  id: spotlight.id,
-  content: spotlight.name,
-  description: spotlight.description,
-  campaigns: spotlight.campaigns,
-  updatedBy: spotlight.updatedBy,
-}))
 
 const spotlightColumns: InstructionTableColumn<SpotlightRow>[] = [
   {
@@ -131,22 +126,103 @@ const spotlightColumns: InstructionTableColumn<SpotlightRow>[] = [
 
 function SpotlightsPage() {
   const navigate = useNavigate()
-  const [rows, setRows] = useState<SpotlightRow[]>(initialSpotlightRows)
+  const location = useLocation()
+  const [spotlights, setSpotlights] = useState<SpotlightDefinition[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [pendingDeleteRow, setPendingDeleteRow] = useState<SpotlightRow | null>(null)
+  const [deleting, setDeleting] = useState(false)
+  const siteId = useMemo(
+    () => resolveSiteId(getSiteIdFromPathname(location.pathname)),
+    [location.pathname],
+  )
+  const locationState = location.state as { successMessage?: string } | null
+
+  useEffect(() => {
+    let cancelled = false
+
+    const loadSpotlights = async () => {
+      setLoading(true)
+      setError(null)
+
+      try {
+        const nextSpotlights = await getSpotlights(siteId)
+
+        if (!cancelled) {
+          setSpotlights(nextSpotlights)
+        }
+      } catch (nextError) {
+        if (!cancelled) {
+          setSpotlights([])
+          setError(nextError instanceof Error ? nextError.message : 'Failed to load spotlights.')
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false)
+        }
+      }
+    }
+
+    void loadSpotlights()
+
+    return () => {
+      cancelled = true
+    }
+  }, [siteId])
+
+  useEffect(() => {
+    if (!locationState?.successMessage) {
+      return
+    }
+
+    setSuccessMessage(locationState.successMessage)
+    navigate(`${location.pathname}${location.search}`, { replace: true, state: null })
+  }, [location.pathname, location.search, locationState?.successMessage, navigate])
+
+  const rows = useMemo<SpotlightRow[]>(
+    () =>
+      spotlights.map((spotlight) => ({
+        id: spotlight.id,
+        content: spotlight.name,
+        description: spotlight.description,
+        campaigns: spotlight.campaigns,
+        updatedBy: spotlight.updatedBy,
+      })),
+    [spotlights],
+  )
 
   const handleRequestDelete = (row: SpotlightRow) => {
     setPendingDeleteRow(row)
   }
 
   const handleCloseDeleteDialog = () => {
+    if (deleting) {
+      return
+    }
+
     setPendingDeleteRow(null)
   }
 
-  const handleConfirmDelete = () => {
-    if (pendingDeleteRow) {
-      setRows((currentRows) => currentRows.filter((row) => row.id !== pendingDeleteRow.id))
+  const handleConfirmDelete = async () => {
+    if (!pendingDeleteRow) {
+      return
     }
-    setPendingDeleteRow(null)
+
+    try {
+      setDeleting(true)
+      setError(null)
+      await deleteSpotlight(siteId, pendingDeleteRow.id)
+      setSpotlights((currentRows) =>
+        currentRows.filter((row) => row.id !== pendingDeleteRow.id),
+      )
+      setSuccessMessage('Spotlight deleted successfully.')
+      setPendingDeleteRow(null)
+    } catch (nextError) {
+      setError(nextError instanceof Error ? nextError.message : 'Failed to delete spotlight.')
+    } finally {
+      setDeleting(false)
+    }
   }
 
   return (
@@ -176,6 +252,7 @@ function SpotlightsPage() {
           </AiInsightsInfoBanner>
 
           <Stack spacing={1.5}>
+            {error ? <Alert severity="error">{error}</Alert> : null}
             <Box>
               <Button
                 component={RouterLink}
@@ -190,8 +267,12 @@ function SpotlightsPage() {
             <DataTable
               rows={rows}
               columns={spotlightColumns}
+              showDelete={!loading}
               onEdit={(row) => navigate(appRoutes.ai.aiInsightsSpotlightEdit(row.id))}
               onDelete={handleRequestDelete}
+              emptyStateMessage={
+                loading ? 'Loading spotlights...' : 'No spotlights are available for this site.'
+              }
               footer={
                 <Box
                   sx={{
@@ -202,7 +283,7 @@ function SpotlightsPage() {
                   }}
                 >
                   <Typography variant="caption" color="text.secondary">
-                    Rows per page: 50&nbsp;&nbsp;&nbsp; 1-{rows.length} of {rows.length}
+                    Rows per page: 50&nbsp;&nbsp;&nbsp; {rows.length === 0 ? '0-0' : `1-${rows.length}`} of {rows.length}
                   </Typography>
                 </Box>
               }
@@ -211,6 +292,21 @@ function SpotlightsPage() {
         </Stack>
       </Page>
 
+      <Snackbar
+        open={Boolean(successMessage)}
+        autoHideDuration={3000}
+        onClose={() => setSuccessMessage(null)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert
+          severity="success"
+          variant="filled"
+          onClose={() => setSuccessMessage(null)}
+          sx={{ width: '100%' }}
+        >
+          {successMessage}
+        </Alert>
+      </Snackbar>
       <Dialog open={Boolean(pendingDeleteRow)} onClose={handleCloseDeleteDialog} maxWidth="xs" fullWidth>
         <DialogTitle>Delete spotlight?</DialogTitle>
         <DialogContent>
@@ -224,10 +320,10 @@ function SpotlightsPage() {
           </Typography>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2.5 }}>
-          <Button variant="outlined" onClick={handleCloseDeleteDialog}>
+          <Button variant="outlined" onClick={handleCloseDeleteDialog} disabled={deleting}>
             Cancel
           </Button>
-          <Button color="error" variant="contained" onClick={handleConfirmDelete}>
+          <Button color="error" variant="contained" onClick={() => void handleConfirmDelete()} disabled={deleting}>
             Delete
           </Button>
         </DialogActions>
