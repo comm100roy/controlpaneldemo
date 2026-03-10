@@ -38,9 +38,9 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-import DashboardCard from '../components/common/DashboardCard'
-import Page from '../components/common/Page'
-import { appRoutes } from '../data/routes'
+import DashboardCard from '../../components/common/DashboardCard'
+import Page from '../../components/common/Page'
+import { appRoutes } from '../../data/routes'
 
 type UsageItem = {
   title: string

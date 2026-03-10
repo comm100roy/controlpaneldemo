@@ -1,7 +1,7 @@
-import Page from '../components/common/Page'
-import SpotlightForm from '../components/insights/SpotlightForm'
-import { emptySpotlightFormValues } from '../data/aiInsights'
-import { appRoutes } from '../data/routes'
+import Page from '../../../../components/common/Page'
+import SpotlightForm from '../../../../components/insights/SpotlightForm'
+import { emptySpotlightFormValues } from '../../../../data/aiInsights'
+import { appRoutes } from '../../../../data/routes'
 
 function NewSpotlightPage() {
   return (

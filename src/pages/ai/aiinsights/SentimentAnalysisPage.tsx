@@ -4,8 +4,8 @@ import {
   AiInsightsHelpLink,
   AiInsightsInfoBanner,
   AiInsightsPanel,
-} from '../components/common/AiInsightsElements'
-import Page from '../components/common/Page'
+} from '../../../components/common/AiInsightsElements'
+import Page from '../../../components/common/Page'
 
 function SentimentAnalysisPage() {
   const [enabled, setEnabled] = useState(true)

@@ -1,8 +1,8 @@
 import { Navigate, useParams } from 'react-router-dom'
-import Page from '../components/common/Page'
-import SpotlightForm from '../components/insights/SpotlightForm'
-import { spotlightDefinitions } from '../data/aiInsights'
-import { appRoutes } from '../data/routes'
+import Page from '../../../../components/common/Page'
+import SpotlightForm from '../../../../components/insights/SpotlightForm'
+import { spotlightDefinitions } from '../../../../data/aiInsights'
+import { appRoutes } from '../../../../data/routes'
 
 function EditSpotlightPage() {
   const { spotlightId } = useParams<{ spotlightId: string }>()

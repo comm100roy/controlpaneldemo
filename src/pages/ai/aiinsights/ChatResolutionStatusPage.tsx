@@ -10,9 +10,9 @@ import {
 import {
   AiInsightsInfoBanner,
   AiInsightsPanel,
-} from '../components/common/AiInsightsElements'
-import FeatureSwitch from '../components/common/FeatureSwitch'
-import Page from '../components/common/Page'
+} from '../../../components/common/AiInsightsElements'
+import FeatureSwitch from '../../../components/common/FeatureSwitch'
+import Page from '../../../components/common/Page'
 
 function ChatResolutionStatusPage() {
   const [enabled, setEnabled] = useState(true)

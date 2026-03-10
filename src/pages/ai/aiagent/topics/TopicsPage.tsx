@@ -24,23 +24,23 @@ import {
   useTheme,
 } from '@mui/material'
 import { useNavigate, useParams } from 'react-router-dom'
-import Page from '../components/common/Page'
-import SideDrawer from '../components/common/SideDrawer'
+import Page from '../../../../components/common/Page'
+import SideDrawer from '../../../../components/common/SideDrawer'
 import CategoryForm, {
   type CategoryFormOption,
   type CategoryFormValues,
-} from '../components/topics/CategoryForm'
+} from '../../../../components/topics/CategoryForm'
 import DataTable, {
   type InstructionRow,
-} from '../components/common/DataTable'
-import TestChatDrawer from '../components/common/TestChatDrawer'
+} from '../../../../components/common/DataTable'
+import TestChatDrawer from '../../../../components/common/TestChatDrawer'
 import {
   topicCategories,
   topicRows as initialTopicRows,
   type TopicCategory,
   type TopicRow,
-} from '../data/dashboard'
-import { appRoutes, resolveAiAgentId } from '../data/routes'
+} from '../../../../data/dashboard'
+import { appRoutes, resolveAiAgentId } from '../../../../data/routes'
 
 type TopicTreeItemProps = {
   node: TopicCategory

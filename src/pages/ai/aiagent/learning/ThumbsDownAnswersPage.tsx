@@ -1,4 +1,4 @@
-import LearningReviewTablePage from '../components/learning/LearningReviewTablePage'
+import LearningReviewTablePage from '../../../../components/learning/LearningReviewTablePage'
 
 function ThumbsDownAnswersPage() {
   return (

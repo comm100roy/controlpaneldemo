@@ -11,15 +11,15 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import Page from '../components/common/Page'
-import TestChatDrawer from '../components/common/TestChatDrawer'
-import AnswerEditorCard from '../components/topics/AnswerEditorCard'
+import Page from '../../../../components/common/Page'
+import TestChatDrawer from '../../../../components/common/TestChatDrawer'
+import AnswerEditorCard from '../../../../components/topics/AnswerEditorCard'
 import {
   topicCategories,
   topicDefinitions,
   type TopicAnswerMode,
-} from '../data/dashboard'
-import { appRoutes, resolveAiAgentId } from '../data/routes'
+} from '../../../../data/dashboard'
+import { appRoutes, resolveAiAgentId } from '../../../../data/routes'
 
 const buildTopicCategoryOptions = (
   categories: typeof topicCategories,

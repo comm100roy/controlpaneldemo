@@ -87,7 +87,9 @@ function OverviewHighlightPanel({
             }}
           >
             <Stack direction="row" spacing={1.5} alignItems="flex-start">
-              <LightbulbOutlinedIcon sx={{ color: 'text.secondary', mt: 0.25 }} />
+              <LightbulbOutlinedIcon
+                sx={{ fontSize: 16, color: 'text.secondary', mt: 0.25 }}
+              />
               <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.5 }}>
                 {alertMessage}
               </Typography>

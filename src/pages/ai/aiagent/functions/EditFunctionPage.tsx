@@ -2,11 +2,11 @@ import { useState } from 'react'
 import { Navigate, useParams } from 'react-router-dom'
 import ScienceIcon from '@mui/icons-material/Science'
 import { Button, Stack } from '@mui/material'
-import Page from '../components/common/Page'
-import TestChatDrawer from '../components/common/TestChatDrawer'
-import FunctionForm from '../components/functions/FunctionForm'
-import { functionDefinitions } from '../data/dashboard'
-import { appRoutes, resolveAiAgentId } from '../data/routes'
+import Page from '../../../../components/common/Page'
+import TestChatDrawer from '../../../../components/common/TestChatDrawer'
+import FunctionForm from '../../../../components/functions/FunctionForm'
+import { functionDefinitions } from '../../../../data/dashboard'
+import { appRoutes, resolveAiAgentId } from '../../../../data/routes'
 
 function EditFunctionPage() {
   const { aiAgentId, functionId } = useParams<{ aiAgentId: string; functionId: string }>()

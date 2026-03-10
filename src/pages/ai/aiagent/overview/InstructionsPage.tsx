@@ -21,17 +21,17 @@ import {
   Typography,
 } from '@mui/material'
 import { Link as RouterLink, useParams } from 'react-router-dom'
-import Page from '../components/common/Page'
-import SideDrawer from '../components/common/SideDrawer'
-import TestChatDrawer from '../components/common/TestChatDrawer'
-import DataTable from '../components/common/DataTable'
+import Page from '../../../../components/common/Page'
+import SideDrawer from '../../../../components/common/SideDrawer'
+import TestChatDrawer from '../../../../components/common/TestChatDrawer'
+import DataTable from '../../../../components/common/DataTable'
 import {
   instructionRows as initialInstructionRows,
   instructionTemplates,
   type InstructionTemplate,
-} from '../data/dashboard'
-import { appRoutes, resolveAiAgentId } from '../data/routes'
-import type { InstructionRow } from '../components/common/DataTable'
+} from '../../../../data/dashboard'
+import { appRoutes, resolveAiAgentId } from '../../../../data/routes'
+import type { InstructionRow } from '../../../../components/common/DataTable'
 
 type DrawerView = 'templates' | 'form' | null
 const maxInstructions = 20

@@ -539,7 +539,6 @@ function SidebarNav({ onNavigate }: SidebarNavProps) {
                                   primaryTypographyProps={{
                                     fontSize: 14,
                                     fontWeight: childSelected ? 700 : 500,
-                                    pl: childSelected ? 1.5 : 0,
                                   }}
                                 />
                               </ListItemButton>

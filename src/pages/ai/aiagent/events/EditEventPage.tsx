@@ -2,14 +2,14 @@ import { useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import ScienceIcon from '@mui/icons-material/Science'
 import { Button, Stack } from '@mui/material'
-import Page from '../components/common/Page'
-import TestChatDrawer from '../components/common/TestChatDrawer'
-import AnswerEditorCard from '../components/topics/AnswerEditorCard'
+import Page from '../../../../components/common/Page'
+import TestChatDrawer from '../../../../components/common/TestChatDrawer'
+import AnswerEditorCard from '../../../../components/topics/AnswerEditorCard'
 import {
   eventDefinitions,
   type TopicAnswerMode,
-} from '../data/dashboard'
-import { appRoutes, resolveAiAgentId } from '../data/routes'
+} from '../../../../data/dashboard'
+import { appRoutes, resolveAiAgentId } from '../../../../data/routes'
 
 function EditEventPage() {
   const { aiAgentId, eventId } = useParams<{ aiAgentId: string; eventId: string }>()

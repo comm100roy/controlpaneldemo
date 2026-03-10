@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import ScienceIcon from '@mui/icons-material/Science'
 import { Button, Stack } from '@mui/material'
-import Page from '../components/common/Page'
-import TestChatDrawer from '../components/common/TestChatDrawer'
-import FunctionForm from '../components/functions/FunctionForm'
-import { emptyFunctionFormValues } from '../data/dashboard'
+import Page from '../../../../components/common/Page'
+import TestChatDrawer from '../../../../components/common/TestChatDrawer'
+import FunctionForm from '../../../../components/functions/FunctionForm'
+import { emptyFunctionFormValues } from '../../../../data/dashboard'
 
 function NewFunctionPage() {
   const [isTestDrawerOpen, setIsTestDrawerOpen] = useState(false)

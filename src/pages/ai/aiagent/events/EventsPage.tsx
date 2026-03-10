@@ -2,11 +2,11 @@ import { useState } from 'react'
 import ScienceIcon from '@mui/icons-material/Science'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Button, Stack } from '@mui/material'
-import Page from '../components/common/Page'
-import TestChatDrawer from '../components/common/TestChatDrawer'
-import DataTable from '../components/common/DataTable'
-import { eventRows } from '../data/dashboard'
-import { appRoutes, resolveAiAgentId } from '../data/routes'
+import Page from '../../../../components/common/Page'
+import TestChatDrawer from '../../../../components/common/TestChatDrawer'
+import DataTable from '../../../../components/common/DataTable'
+import { eventRows } from '../../../../data/dashboard'
+import { appRoutes, resolveAiAgentId } from '../../../../data/routes'
 
 function EventsPage() {
   const { aiAgentId } = useParams<{ aiAgentId: string }>()

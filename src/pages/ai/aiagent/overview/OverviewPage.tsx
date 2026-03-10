@@ -2,22 +2,22 @@ import { useState } from 'react'
 import ScienceIcon from '@mui/icons-material/Science'
 import { Button, Grid, Stack } from '@mui/material'
 import { Link as RouterLink, useParams } from 'react-router-dom'
-import BookedMeetingsDrawer from '../components/dashboard/BookedMeetingsDrawer'
-import CollectedLeadsDrawer from '../components/dashboard/CollectedLeadsDrawer'
-import EditAiAgentDrawer from '../components/dashboard/EditAiAgentDrawer'
-import Page from '../components/common/Page'
-import TestChatDrawer from '../components/common/TestChatDrawer'
-import AgentOverviewCard from '../components/dashboard/AgentOverviewCard'
-import OverviewHighlightPanel from '../components/dashboard/OverviewHighlightPanel'
-import StatsGrid from '../components/dashboard/StatsGrid'
-import { getAiAgentRecord } from '../data/aiAgents'
+import BookedMeetingsDrawer from '../../../../components/dashboard/BookedMeetingsDrawer'
+import CollectedLeadsDrawer from '../../../../components/dashboard/CollectedLeadsDrawer'
+import EditAiAgentDrawer from '../../../../components/dashboard/EditAiAgentDrawer'
+import Page from '../../../../components/common/Page'
+import TestChatDrawer from '../../../../components/common/TestChatDrawer'
+import AgentOverviewCard from '../../../../components/dashboard/AgentOverviewCard'
+import OverviewHighlightPanel from '../../../../components/dashboard/OverviewHighlightPanel'
+import StatsGrid from '../../../../components/dashboard/StatsGrid'
+import { getAiAgentRecord } from '../../../../data/aiAgents'
 import {
   agentProfile,
   knowledgeStats,
   lowerMetrics,
   overviewPanels,
-} from '../data/dashboard'
-import { appRoutes, resolveAiAgentId } from '../data/routes'
+} from '../../../../data/dashboard'
+import { appRoutes, resolveAiAgentId } from '../../../../data/routes'
 
 function OverviewPage() {
   const { aiAgentId } = useParams<{ aiAgentId: string }>()

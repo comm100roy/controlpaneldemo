@@ -25,18 +25,18 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import NewFileContentDrawer from '../components/knowledge/NewFileContentDrawer'
-import NewKbArticleContentDrawer from '../components/knowledge/NewKbArticleContentDrawer'
-import NewSnippetContentDrawer from '../components/knowledge/NewSnippetContentDrawer'
-import NewWebpageContentDrawer from '../components/knowledge/NewWebpageContentDrawer'
-import Page from '../components/common/Page'
-import TestChatDrawer from '../components/common/TestChatDrawer'
+import NewFileContentDrawer from '../../../components/knowledge/NewFileContentDrawer'
+import NewKbArticleContentDrawer from '../../../components/knowledge/NewKbArticleContentDrawer'
+import NewSnippetContentDrawer from '../../../components/knowledge/NewSnippetContentDrawer'
+import NewWebpageContentDrawer from '../../../components/knowledge/NewWebpageContentDrawer'
+import Page from '../../../components/common/Page'
+import TestChatDrawer from '../../../components/common/TestChatDrawer'
 import DataTable, {
   type InstructionTableBatchAction,
   type InstructionTableColumn,
-} from '../components/common/DataTable'
-import StatsGrid from '../components/dashboard/StatsGrid'
-import { knowledgeRows as initialKnowledgeRows, type KnowledgeRow } from '../data/dashboard'
+} from '../../../components/common/DataTable'
+import StatsGrid from '../../../components/dashboard/StatsGrid'
+import { knowledgeRows as initialKnowledgeRows, type KnowledgeRow } from '../../../data/dashboard'
 
 function KnowledgePage() {
   const [isTestDrawerOpen, setIsTestDrawerOpen] = useState(false)
