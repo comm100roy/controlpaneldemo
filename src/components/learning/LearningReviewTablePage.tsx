@@ -1,57 +1,79 @@
-import { useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import DownloadOutlinedIcon from '@mui/icons-material/DownloadOutlined'
-import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined'
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { DateRangePicker } from '@mui/x-date-pickers-pro/DateRangePicker'
-import {
-  Button,
-  Card,
-  CardContent,
-  InputAdornment,
-  Link,
-  Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
-  TextField,
-  Typography,
-} from '@mui/material'
+import { Box, Button, InputAdornment, Link, Stack, TextField, Typography } from '@mui/material'
 import dayjs, { type Dayjs } from 'dayjs'
+import DataTable, {
+  type InstructionRow,
+  type InstructionTableColumn,
+} from '../common/DataTable'
 import Page from '../common/Page'
 
-type LearningReviewColumn = {
-  key: string
-  label: string
-  align?: 'left' | 'center' | 'right'
-  width?: number | string
-}
-
-type LearningReviewTablePageProps = {
-  title: string
-  description: string
-  columns: LearningReviewColumn[]
-  searchPlaceholder: string
-  footerLinkText?: string
-}
-
+type DateFilterValue = Dayjs | Date | string | null | undefined
 type DateRangeValue = [Dayjs | null, Dayjs | null]
 
-function LearningReviewTablePage({
+type LearningReviewTablePageProps<Row extends InstructionRow> = {
+  title: string
+  description: string
+  rows: Row[]
+  columns: InstructionTableColumn<Row>[]
+  searchPlaceholder: string
+  footerLinkText?: string
+  getSearchText: (row: Row) => string
+  getDateValue: (row: Row) => DateFilterValue
+  onEdit?: (row: Row) => void
+  emptyStateMessage?: ReactNode
+  showOperations?: boolean
+}
+
+const defaultDateRange: DateRangeValue = [dayjs('2026-02-08'), dayjs('2026-03-09')]
+
+function LearningReviewTablePage<Row extends InstructionRow>({
   title,
   description,
+  rows,
   columns,
   searchPlaceholder,
   footerLinkText,
-}: LearningReviewTablePageProps) {
+  getSearchText,
+  getDateValue,
+  onEdit,
+  emptyStateMessage,
+  showOperations = false,
+}: LearningReviewTablePageProps<Row>) {
   const [searchValue, setSearchValue] = useState('')
-  const [dateRange, setDateRange] = useState<DateRangeValue>([
-    dayjs('2026-02-08'),
-    dayjs('2026-03-09'),
-  ])
+  const [dateRange, setDateRange] = useState<DateRangeValue>(defaultDateRange)
+
+  const filteredRows = useMemo(() => {
+    const normalizedSearch = searchValue.trim().toLowerCase()
+    const [startDate, endDate] = dateRange
+
+    return rows.filter((row) => {
+      const matchesSearch =
+        normalizedSearch.length === 0 ||
+        getSearchText(row).toLowerCase().includes(normalizedSearch)
+
+      const rowDate = dayjs(getDateValue(row))
+      const hasValidRowDate = rowDate.isValid()
+      const matchesStartDate =
+        !startDate || !hasValidRowDate || !rowDate.isBefore(startDate.startOf('day'))
+      const matchesEndDate =
+        !endDate || !hasValidRowDate || !rowDate.isAfter(endDate.endOf('day'))
+
+      return matchesSearch && matchesStartDate && matchesEndDate
+    })
+  }, [dateRange, getDateValue, getSearchText, rows, searchValue])
+
+  const paginationLabel = useMemo(() => {
+    if (filteredRows.length === 0) {
+      return 'Rows per page: 50   0-0 of 0'
+    }
+
+    return `Rows per page: 50   1-${filteredRows.length} of ${filteredRows.length}`
+  }, [filteredRows.length])
 
   return (
     <Page title={title} description={description}>
@@ -120,43 +142,28 @@ function LearningReviewTablePage({
         </Stack>
       </Stack>
 
-      <Card>
-        <CardContent sx={{ p: 0 }}>
-          <Table>
-            <colgroup>
-              {columns.map((column) => (
-                <col
-                  key={column.key}
-                  style={column.width ? { width: column.width } : undefined}
-                />
-              ))}
-            </colgroup>
-            <TableHead>
-              <TableRow>
-                {columns.map((column) => (
-                  <TableCell key={column.key} align={column.align} sx={{ fontWeight: 700 }}>
-                    {column.label}
-                  </TableCell>
-                ))}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              <TableRow>
-                <TableCell colSpan={columns.length} sx={{ py: 9 }}>
-                  <Stack spacing={1.5} alignItems="center" justifyContent="center">
-                    <Inventory2OutlinedIcon
-                      sx={{ fontSize: 56, color: 'rgba(15, 23, 42, 0.22)' }}
-                    />
-                    <Typography variant="body2" color="text.secondary">
-                      No records found.
-                    </Typography>
-                  </Stack>
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      <DataTable
+        rows={filteredRows}
+        columns={columns}
+        onEdit={onEdit}
+        showDelete={false}
+        showOperations={showOperations}
+        emptyStateMessage={emptyStateMessage}
+        footer={
+          <Box
+            sx={{
+              px: 2,
+              py: 1.25,
+              display: 'flex',
+              justifyContent: 'flex-end',
+            }}
+          >
+            <Typography variant="caption" color="text.secondary">
+              {paginationLabel}
+            </Typography>
+          </Box>
+        }
+      />
 
       {footerLinkText ? (
         <Link component="button" type="button" underline="hover" sx={{ alignSelf: 'flex-start' }}>

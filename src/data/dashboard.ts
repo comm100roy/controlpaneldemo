@@ -593,6 +593,77 @@ export const learningItems: InfoPanelItem[] = [
   },
 ]
 
+export type UnansweredQuestionGroupRow = InstructionRow & {
+  questionCount: number
+  createdTime: string
+  createdAt: string
+}
+
+export const unansweredQuestionGroupRows: UnansweredQuestionGroupRow[] = [
+  {
+    id: 'refund-policy-group',
+    content: 'Refund policy for yearly plans',
+    questionCount: 6,
+    createdTime: '2026/03/08 11:14',
+    createdAt: '2026-03-08T11:14:00',
+  },
+  {
+    id: 'multilingual-faq-group',
+    content: 'Support for multilingual FAQ content',
+    questionCount: 4,
+    createdTime: '2026/03/04 09:27',
+    createdAt: '2026-03-04T09:27:00',
+  },
+  {
+    id: 'weekend-support-group',
+    content: 'Weekend support availability and escalation',
+    questionCount: 3,
+    createdTime: '2026/02/18 16:42',
+    createdAt: '2026-02-18T16:42:00',
+  },
+]
+
+export type ThumbsDownAnswerRow = InstructionRow & {
+  answer: string
+  channel: string
+  origin: string
+  createdTime: string
+  createdAt: string
+}
+
+export const thumbsDownAnswerRows: ThumbsDownAnswerRow[] = [
+  {
+    id: 'billing-response-review',
+    content: 'Can I switch from monthly to yearly billing mid-cycle?',
+    answer:
+      'You can switch plans at any time by contacting support, and the billing change takes effect on the next invoice.',
+    channel: 'Live Chat',
+    origin: 'Topic',
+    createdTime: '2026/03/09 15:06',
+    createdAt: '2026-03-09T15:06:00',
+  },
+  {
+    id: 'integration-answer-review',
+    content: 'Does the AI Agent work with Salesforce cases?',
+    answer:
+      'The AI Agent can connect with Salesforce through supported integrations, but setup depends on your current Salesforce edition and workflow needs.',
+    channel: 'Messaging',
+    origin: 'Knowledge',
+    createdTime: '2026/03/02 13:48',
+    createdAt: '2026-03-02T13:48:00',
+  },
+  {
+    id: 'hours-answer-review',
+    content: 'Are agents available on weekends for urgent issues?',
+    answer:
+      'Weekend support coverage depends on the team schedule configured for your account, and urgent escalations follow your business hours rules.',
+    channel: 'Live Chat',
+    origin: 'Snippet',
+    createdTime: '2026/02/21 10:33',
+    createdAt: '2026-02-21T10:33:00',
+  },
+]
+
 export const instructionRows: InstructionRow[] = [
   {
     id: 'friendly',

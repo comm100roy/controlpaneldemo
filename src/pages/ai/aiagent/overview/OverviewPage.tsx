@@ -160,7 +160,9 @@ function OverviewPage() {
                       ? () => setIsBookedMeetingsDrawerOpen(true)
                     : undefined
                 }
-                headerMinHeight={132}
+                headerMinHeight={104}
+                bodySpacing={2}
+                contentSx={{ p: { xs: 2.25, md: 2.5 } }}
               />
             </Grid>
           ))}

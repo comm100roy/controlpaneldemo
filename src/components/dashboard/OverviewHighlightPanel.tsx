@@ -21,6 +21,8 @@ type OverviewHighlightPanelProps = {
   links?: string[]
   footer?: ReactNode
   headerMinHeight?: number
+  bodySpacing?: number
+  contentSx?: object
 }
 
 function OverviewHighlightPanel({
@@ -34,6 +36,8 @@ function OverviewHighlightPanel({
   links,
   footer,
   headerMinHeight,
+  bodySpacing = 3,
+  contentSx,
 }: OverviewHighlightPanelProps) {
   const countNode = countHref ? (
     <Link
@@ -75,8 +79,9 @@ function OverviewHighlightPanel({
       title={title}
       description={description}
       headerSx={headerMinHeight ? { minHeight: headerMinHeight } : undefined}
+      contentSx={contentSx}
     >
-      <Stack spacing={3} sx={{ height: '100%' }}>
+      <Stack spacing={bodySpacing} sx={{ height: '100%' }}>
         {alertMessage ? (
           <Box
             sx={{
@@ -98,7 +103,7 @@ function OverviewHighlightPanel({
         ) : null}
 
         {links ? (
-          <Stack spacing={1.25} sx={{ pt: 0.5 }}>
+          <Stack spacing={0.5} sx={{ pt: 0.5 }}>
             {links.map((item) => (
               <Typography
                 key={item}
@@ -106,7 +111,7 @@ function OverviewHighlightPanel({
                 sx={{
                   color: 'primary.main',
                   fontSize: 14,
-                  lineHeight: 1.6,
+                  lineHeight: 1.4,
                 }}
               >
                 • {item}
