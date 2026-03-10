@@ -17,6 +17,7 @@ type OverviewHighlightPanelProps = {
   count?: number
   countLabel?: string
   countHref?: string
+  countOnClick?: () => void
   links?: string[]
   footer?: ReactNode
   headerMinHeight?: number
@@ -29,6 +30,7 @@ function OverviewHighlightPanel({
   count,
   countLabel,
   countHref,
+  countOnClick,
   links,
   footer,
   headerMinHeight,
@@ -40,6 +42,25 @@ function OverviewHighlightPanel({
       underline="none"
       color="primary.main"
       sx={{ fontSize: 40, fontWeight: 700, lineHeight: 1 }}
+    >
+      {count}
+    </Link>
+  ) : countOnClick ? (
+    <Link
+      component="button"
+      type="button"
+      onClick={countOnClick}
+      underline="none"
+      color="primary.main"
+      sx={{
+        p: 0,
+        border: 0,
+        background: 'transparent',
+        fontSize: 40,
+        fontWeight: 700,
+        lineHeight: 1,
+        cursor: 'pointer',
+      }}
     >
       {count}
     </Link>

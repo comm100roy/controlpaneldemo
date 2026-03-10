@@ -2,6 +2,7 @@ import { useMemo, useState, type ReactNode } from 'react'
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined'
+import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined'
 import {
   Box,
   Button,
@@ -56,6 +57,9 @@ type InstructionTableProps<Row extends InstructionRow = InstructionRow> = {
   selectable?: boolean
   batchActions?: InstructionTableBatchAction<Row>[]
   footer?: ReactNode
+  emptyStateMessage?: ReactNode
+  emptyStateIcon?: ReactNode
+  emptyStateMinHeight?: number
 }
 
 function InstructionTable<Row extends InstructionRow>({
@@ -70,6 +74,9 @@ function InstructionTable<Row extends InstructionRow>({
   selectable = false,
   batchActions = [],
   footer,
+  emptyStateMessage = 'No records found.',
+  emptyStateIcon,
+  emptyStateMinHeight = 320,
 }: InstructionTableProps<Row>) {
   type SortDirection = 'asc' | 'desc'
 
@@ -360,45 +367,60 @@ function InstructionTable<Row extends InstructionRow>({
             )}
           </TableHead>
           <TableBody>
-            {sortedRows.map((row) => (
-              <TableRow key={row.id} hover>
-                {selectable ? (
-                  <TableCell padding="checkbox">
-                    <Checkbox
-                      checked={currentSelectedRowIds.includes(row.id)}
-                      onChange={() => handleToggleRow(row.id)}
-                    />
-                  </TableCell>
-                ) : null}
-                {resolvedColumns.map((column) => (
-                  <TableCell key={column.key} align={column.align}>
-                    {column.render(row)}
-                  </TableCell>
-                ))}
-                {shouldShowOperations ? (
-                  <TableCell align="right">
-                    <Stack direction="row" spacing={1} justifyContent="flex-end">
-                      <IconButton
-                        size="small"
-                        color="primary"
-                        onClick={() => onEdit?.(row)}
-                      >
-                        <EditOutlinedIcon fontSize="small" />
-                      </IconButton>
-                      {showDelete ? (
+            {sortedRows.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={totalColumnCount} sx={{ py: 0, height: emptyStateMinHeight }}>
+                  <Stack spacing={1.5} alignItems="center" justifyContent="center" sx={{ height: '100%' }}>
+                    {emptyStateIcon ?? (
+                      <Inventory2OutlinedIcon sx={{ fontSize: 56, color: 'rgba(15, 23, 42, 0.22)' }} />
+                    )}
+                    <Typography variant="body2" color="text.secondary">
+                      {emptyStateMessage}
+                    </Typography>
+                  </Stack>
+                </TableCell>
+              </TableRow>
+            ) : (
+              sortedRows.map((row) => (
+                <TableRow key={row.id} hover>
+                  {selectable ? (
+                    <TableCell padding="checkbox">
+                      <Checkbox
+                        checked={currentSelectedRowIds.includes(row.id)}
+                        onChange={() => handleToggleRow(row.id)}
+                      />
+                    </TableCell>
+                  ) : null}
+                  {resolvedColumns.map((column) => (
+                    <TableCell key={column.key} align={column.align}>
+                      {column.render(row)}
+                    </TableCell>
+                  ))}
+                  {shouldShowOperations ? (
+                    <TableCell align="right">
+                      <Stack direction="row" spacing={1} justifyContent="flex-end">
                         <IconButton
                           size="small"
-                          color="default"
-                          onClick={() => onDelete?.(row)}
+                          color="primary"
+                          onClick={() => onEdit?.(row)}
                         >
-                          <DeleteOutlineOutlinedIcon fontSize="small" />
+                          <EditOutlinedIcon fontSize="small" />
                         </IconButton>
-                      ) : null}
-                    </Stack>
-                  </TableCell>
-                ) : null}
-              </TableRow>
-            ))}
+                        {showDelete ? (
+                          <IconButton
+                            size="small"
+                            color="default"
+                            onClick={() => onDelete?.(row)}
+                          >
+                            <DeleteOutlineOutlinedIcon fontSize="small" />
+                          </IconButton>
+                        ) : null}
+                      </Stack>
+                    </TableCell>
+                  ) : null}
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
         {footer ? (

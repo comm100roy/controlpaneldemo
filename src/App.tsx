@@ -9,16 +9,21 @@ import {
   productDashboardPath,
 } from './data/routes'
 import DashboardPage from './pages/DashboardPage'
+import ChatResolutionStatusPage from './pages/ChatResolutionStatusPage'
 import EditEventPage from './pages/EditEventPage'
 import EditFunctionPage from './pages/EditFunctionPage'
+import EditSpotlightPage from './pages/EditSpotlightPage'
 import EditTopicPage from './pages/EditTopicPage'
 import EventsPage from './pages/EventsPage'
 import FunctionsPage from './pages/FunctionsPage'
 import InstructionsPage from './pages/InstructionsPage'
 import KnowledgePage from './pages/KnowledgePage'
+import NewSpotlightPage from './pages/NewSpotlightPage'
 import NewFunctionPage from './pages/NewFunctionPage'
 import OverviewPage from './pages/OverviewPage'
 import ProductPage from './pages/ProductPage'
+import SentimentAnalysisPage from './pages/SentimentAnalysisPage'
+import SpotlightsPage from './pages/SpotlightsPage'
 import ThumbsDownAnswersPage from './pages/ThumbsDownAnswersPage'
 import TopicsPage from './pages/TopicsPage'
 import UnansweredQuestionsPage from './pages/UnansweredQuestionsPage'
@@ -266,12 +271,27 @@ function App() {
         />
         <Route
           path={appRoutes.ai.aiInsights}
-          element={
-            <ProductPage
-              title={productSnapshots.aiinsights.title}
-              description={productSnapshots.aiinsights.description}
-            />
-          }
+          element={<Navigate to={appRoutes.ai.aiInsightsSentimentAnalysis} replace />}
+        />
+        <Route
+          path={appRoutes.ai.aiInsightsSentimentAnalysis}
+          element={<SentimentAnalysisPage />}
+        />
+        <Route
+          path={appRoutes.ai.aiInsightsSpotlights}
+          element={<SpotlightsPage />}
+        />
+        <Route
+          path={appRoutes.ai.aiInsightsSpotlightNew}
+          element={<NewSpotlightPage />}
+        />
+        <Route
+          path={appRoutes.ai.aiInsightsSpotlightEditPattern}
+          element={<EditSpotlightPage />}
+        />
+        <Route
+          path={appRoutes.ai.aiInsightsChatResolutionStatus}
+          element={<ChatResolutionStatusPage />}
         />
         <Route
           path={appRoutes.ai.taskBot}
@@ -320,7 +340,7 @@ function App() {
         />
         <Route
           path={legacyRoutes.aiInsights}
-          element={<Navigate to={appRoutes.ai.aiInsights} replace />}
+          element={<Navigate to={appRoutes.ai.aiInsightsSentimentAnalysis} replace />}
         />
         <Route
           path={legacyRoutes.taskBot}

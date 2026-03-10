@@ -155,11 +155,11 @@ const usageItems: UsageItem[] = [
 const aiAgentLiveChatMetrics: ChatMetric[] = [
   { label: 'AI Agent Only Chats', value: '13' },
   { label: 'Avg. Rating of AI Agent Only Chats', value: '0' },
-  { label: '% of AI Agent Only Chats', value: '100 %' },
-  { label: 'AI Agent Answers', value: '6' },
-  { label: 'Total Time of AI Agent Only Chats', value: '239 min' },
-  { label: 'Chats from AI Agent to Human Agent or Offline Message', value: '0' },
-  { label: '% of High Confidence Answers', value: '83.33 %' },
+  { label: '% of AI Agent Only Chats', value: '72.22 %' },
+  { label: 'AI Agent Answers', value: '2' },
+  { label: 'Total Time of AI Agent Only Chats', value: '288 min' },
+  { label: 'Chats from AI Agent to Human Agent or Offline Message', value: '5' },
+  { label: '% of High Confidence Answers', value: '0 %' },
 ]
 
 const aiAgentTicketingMetrics: ChatMetric[] = [
@@ -293,27 +293,35 @@ function ChatMetricGrid({ metrics }: { metrics: ChatMetric[] }) {
           sm: 'repeat(2, minmax(0, 1fr))',
           lg: 'repeat(4, minmax(0, 1fr))',
         },
-        borderTop: '1px solid rgba(15, 23, 42, 0.08)',
-        borderLeft: '1px solid rgba(15, 23, 42, 0.08)',
+        columnGap: 0,
+        rowGap: { xs: 0, lg: 3 },
       }}
     >
-      {metrics.map((metric) => (
+      {metrics.map((metric, index) => (
         <Box
           key={metric.label}
           sx={{
-            minHeight: 108,
-            p: 2,
+            minHeight: 122,
+            px: 4,
+            py: 2.5,
             display: 'flex',
             flexDirection: 'column',
-            borderRight: '1px solid rgba(15, 23, 42, 0.08)',
-            borderBottom: '1px solid rgba(15, 23, 42, 0.08)',
+            borderLeft: '1px solid rgba(15, 23, 42, 0.08)',
+            borderRight: {
+              xs: '1px solid rgba(15, 23, 42, 0.08)',
+              sm: index % 2 === 1 ? '1px solid rgba(15, 23, 42, 0.08)' : 'none',
+              lg:
+                (index + 1) % 4 === 0 || index === metrics.length - 1
+                  ? '1px solid rgba(15, 23, 42, 0.08)'
+                  : 'none',
+            },
           }}
         >
-          <Typography sx={{ fontSize: 12, color: '#607d8b', lineHeight: 1.45 }}>
+          <Typography sx={{ fontSize: 12, color: '#6e7d88', lineHeight: 1.45, maxWidth: 220 }}>
             {metric.label}
           </Typography>
           <Typography
-            sx={{ mt: 'auto', pt: 1.5, fontSize: 18, fontWeight: 600, color: '#37474f' }}
+            sx={{ mt: 'auto', pt: 1.75, fontSize: 18, fontWeight: 600, color: '#37474f' }}
           >
             {metric.value}
           </Typography>

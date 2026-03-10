@@ -158,7 +158,24 @@ export const level1Navigation: Level1NavItem[] = [
       {
         label: 'AI Insights',
         segment: 'aiinsights',
-        path: appRoutes.ai.aiInsights,
+        path: appRoutes.ai.aiInsightsSentimentAnalysis,
+        children: [
+          {
+            label: 'Sentiment Analysis',
+            segment: 'sentiment-analysis',
+            path: appRoutes.ai.aiInsightsSentimentAnalysis,
+          },
+          {
+            label: 'Spotlights',
+            segment: 'spotlights',
+            path: appRoutes.ai.aiInsightsSpotlights,
+          },
+          {
+            label: 'Chat Resolution Status',
+            segment: 'chat-resolution-status',
+            path: appRoutes.ai.aiInsightsChatResolutionStatus,
+          },
+        ],
       },
       {
         label: 'Task Bot',

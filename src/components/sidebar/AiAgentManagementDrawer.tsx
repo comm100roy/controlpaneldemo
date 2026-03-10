@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import ChatBubbleOutlineOutlinedIcon from '@mui/icons-material/ChatBubbleOutlineOutlined'
+import HelpOutlineRoundedIcon from '@mui/icons-material/HelpOutlineRounded'
 import MoreVertOutlinedIcon from '@mui/icons-material/MoreVertOutlined'
 import OpenInNewOutlinedIcon from '@mui/icons-material/OpenInNewOutlined'
 import SmartToyOutlinedIcon from '@mui/icons-material/SmartToyOutlined'
@@ -72,6 +73,7 @@ function AiAgentManagementDrawer({
   onDeleteAgent,
 }: AiAgentManagementDrawerProps) {
   const [view, setView] = useState<DrawerView>('list')
+  const [formMode, setFormMode] = useState<'form' | 'avatar'>('form')
   const [editingAgentId, setEditingAgentId] = useState<string | null>(null)
   const [operationsAnchor, setOperationsAnchor] = useState<null | HTMLElement>(null)
   const [operationsAgentId, setOperationsAgentId] = useState<string | null>(null)
@@ -111,12 +113,14 @@ function AiAgentManagementDrawer({
   const handleShowNewForm = () => {
     handleCloseOperationsMenu()
     setEditingAgentId(null)
+    setFormMode('form')
     setView('new')
   }
 
   const handleShowEditForm = (agentId: string) => {
     handleCloseOperationsMenu()
     setEditingAgentId(agentId)
+    setFormMode('form')
     setView('edit')
   }
 
@@ -140,6 +144,7 @@ function AiAgentManagementDrawer({
 
   const handleCancelForm = () => {
     setEditingAgentId(null)
+    setFormMode('form')
     setView('list')
   }
 
@@ -288,7 +293,22 @@ function AiAgentManagementDrawer({
       <SideDrawer
         open={open}
         onClose={onClose}
-        title={view === 'list' ? 'AI Agent' : view === 'new' ? 'New AI Agent' : 'Edit AI Agent'}
+        title={
+          view === 'list' ? (
+            'AI Agent'
+          ) : formMode === 'avatar' ? (
+            <Stack direction="row" spacing={0.75} alignItems="center">
+              <Typography variant="h5" sx={{ fontWeight: 700 }}>
+                Change Avatar
+              </Typography>
+              <HelpOutlineRoundedIcon sx={{ fontSize: 20, color: 'text.disabled' }} />
+            </Stack>
+          ) : view === 'new' ? (
+            'New AI Agent'
+          ) : (
+            'Edit AI Agent'
+          )
+        }
         width={{ xs: '100%', lg: 1000 }}
       >
         {view === 'list' ? (
@@ -362,6 +382,7 @@ function AiAgentManagementDrawer({
             paidAgentLimit={paidAiAgentsLimit}
             submitLabel={view === 'new' ? 'Create' : 'Save'}
             cancelLabel="Back"
+            onModeChange={setFormMode}
             onSubmit={handleSubmitForm}
             onCancel={handleCancelForm}
           />

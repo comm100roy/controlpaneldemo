@@ -54,9 +54,13 @@ function SideDrawer({ open, title, onClose, children, width, titleActions }: Sid
         </Box>
 
         <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={2}>
-          <Typography variant="h5" sx={{ fontWeight: 700 }}>
-            {title}
-          </Typography>
+          {typeof title === 'string' ? (
+            <Typography variant="h5" sx={{ fontWeight: 700 }}>
+              {title}
+            </Typography>
+          ) : (
+            title
+          )}
           {titleActions}
         </Stack>
 

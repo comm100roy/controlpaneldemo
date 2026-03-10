@@ -2,6 +2,8 @@ import { useState } from 'react'
 import ScienceIcon from '@mui/icons-material/Science'
 import { Button, Grid, Stack } from '@mui/material'
 import { Link as RouterLink, useParams } from 'react-router-dom'
+import BookedMeetingsDrawer from '../components/dashboard/BookedMeetingsDrawer'
+import CollectedLeadsDrawer from '../components/dashboard/CollectedLeadsDrawer'
 import EditAiAgentDrawer from '../components/dashboard/EditAiAgentDrawer'
 import Page from '../components/common/Page'
 import TestChatDrawer from '../components/common/TestChatDrawer'
@@ -21,6 +23,8 @@ function OverviewPage() {
   const { aiAgentId } = useParams<{ aiAgentId: string }>()
   const [isTestDrawerOpen, setIsTestDrawerOpen] = useState(false)
   const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false)
+  const [isCollectedLeadsDrawerOpen, setIsCollectedLeadsDrawerOpen] = useState(false)
+  const [isBookedMeetingsDrawerOpen, setIsBookedMeetingsDrawerOpen] = useState(false)
   const [editDrawerSession, setEditDrawerSession] = useState(0)
   const resolvedAiAgentId = resolveAiAgentId(aiAgentId)
   const selectedAiAgent = getAiAgentRecord(resolvedAiAgentId)
@@ -50,7 +54,12 @@ function OverviewPage() {
   const resolvedLowerMetrics = lowerMetrics.map((metric) =>
     metric.title === 'Functions'
       ? { ...metric, countHref: appRoutes.ai.aiAgentFunctions(resolvedAiAgentId) }
-      : metric,
+      : metric.title === 'Learning'
+        ? {
+            ...metric,
+            countHref: appRoutes.ai.aiAgentLearningUnansweredQuestions(resolvedAiAgentId),
+          }
+        : metric,
   )
 
   const agentName = resolvedAgentProfile.profile[0]?.value ?? selectedAiAgent.name
@@ -144,6 +153,13 @@ function OverviewPage() {
                 count={metric.value}
                 countLabel={metric.countLabel}
                 countHref={metric.countHref}
+                countOnClick={
+                  metric.title === 'Collected Leads'
+                    ? () => setIsCollectedLeadsDrawerOpen(true)
+                    : metric.title === 'Booked Meetings'
+                      ? () => setIsBookedMeetingsDrawerOpen(true)
+                    : undefined
+                }
                 headerMinHeight={132}
               />
             </Grid>
@@ -162,6 +178,14 @@ function OverviewPage() {
         initialLanguage={agentLanguage}
         initialChannel={agentChannel}
         initialDescription={resolvedAgentProfile.description}
+      />
+      <CollectedLeadsDrawer
+        open={isCollectedLeadsDrawerOpen}
+        onClose={() => setIsCollectedLeadsDrawerOpen(false)}
+      />
+      <BookedMeetingsDrawer
+        open={isBookedMeetingsDrawerOpen}
+        onClose={() => setIsBookedMeetingsDrawerOpen(false)}
       />
     </>
   )

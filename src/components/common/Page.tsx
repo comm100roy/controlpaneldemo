@@ -40,7 +40,7 @@ function Page({
         alignItems="flex-start"
         gap={2}
       >
-        <Stack spacing={1.5} sx={{ minWidth: 0 }}>
+        <Stack spacing={1} sx={{ minWidth: 0 }}>
           <Stack
             direction="row"
             spacing={1}
@@ -56,7 +56,7 @@ function Page({
             {titleSuffix}
           </Stack>
           {(description || belowDescription) ? (
-            <Stack spacing={1.5} alignItems="flex-start">
+            <Stack spacing={1} alignItems="flex-start">
               {description ? (
                 <Typography
                   variant="body2"
