@@ -1,31 +1,45 @@
 import { useState } from 'react'
 import HelpOutlineRoundedIcon from '@mui/icons-material/HelpOutlineRounded'
 import { Stack, Typography } from '@mui/material'
-import AiAgentForm from './AiAgentForm'
 import SideDrawer from '../common/SideDrawer'
+import type { AiAgentRecord } from '../../data/aiAgents'
+import EditAiAgentFormSection from './EditAiAgentFormSection'
 
 type EditAiAgentDrawerProps = {
   open: boolean
   onClose: () => void
-  initialName: string
-  initialLanguage: string
-  initialChannel: string
-  initialDescription: string
+  agent: AiAgentRecord
+  onSubmitAgent: (agent: AiAgentRecord) => Promise<AiAgentRecord>
 }
 
 function EditAiAgentDrawer({
   open,
   onClose,
-  initialName,
-  initialLanguage,
-  initialChannel,
-  initialDescription,
+  agent,
+  onSubmitAgent,
 }: EditAiAgentDrawerProps) {
   const [mode, setMode] = useState<'form' | 'avatar'>('form')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
   const handleClose = () => {
     setMode('form')
+    setIsSubmitting(false)
+    setSubmitError(null)
     onClose()
+  }
+
+  const handleSubmit = async (nextAgent: AiAgentRecord) => {
+    setIsSubmitting(true)
+    setSubmitError(null)
+
+    try {
+      await onSubmitAgent(nextAgent)
+      handleClose()
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : 'Failed to update AI agent.')
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -46,13 +60,12 @@ function EditAiAgentDrawer({
       }
       width={{ xs: '100%', lg: 1000 }}
     >
-      <AiAgentForm
-        initialName={initialName}
-        initialLanguage={initialLanguage}
-        initialChannel={initialChannel}
-        initialDescription={initialDescription}
+      <EditAiAgentFormSection
+        agent={agent}
+        submitting={isSubmitting}
+        submitError={submitError}
         onModeChange={setMode}
-        onSubmit={handleClose}
+        onSubmitAgent={handleSubmit}
         onCancel={handleClose}
       />
     </SideDrawer>

@@ -21,6 +21,7 @@ import {
   Typography,
 } from '@mui/material'
 import AiAgentForm, { type AiAgentFormValues } from '../dashboard/AiAgentForm'
+import EditAiAgentFormSection from '../dashboard/EditAiAgentFormSection'
 import DataTable, {
   type InstructionRow,
   type InstructionTableColumn,
@@ -38,9 +39,9 @@ type AiAgentManagementDrawerProps = {
   agents: AiAgentRecord[]
   loading: boolean
   error: string | null
-  onCreateAgent: (agent: AiAgentRecord) => void
-  onUpdateAgent: (agent: AiAgentRecord) => void
-  onDeleteAgent: (agentId: string) => void
+  onCreateAgent: (agent: AiAgentRecord) => Promise<AiAgentRecord>
+  onUpdateAgent: (agent: AiAgentRecord) => Promise<AiAgentRecord>
+  onDeleteAgent: (agentId: string) => Promise<void>
 }
 
 type AiAgentTableRow = InstructionRow & AiAgentRecord
@@ -84,6 +85,8 @@ function AiAgentManagementDrawer({
   const [deleteConfirmationAgentId, setDeleteConfirmationAgentId] = useState<string | null>(
     null,
   )
+  const [isMutating, setIsMutating] = useState(false)
+  const [mutationError, setMutationError] = useState<string | null>(null)
 
   const paidCount = agents.filter((agent) => agent.paymentStatus === 'Paid').length
   const displayedPaidCount = paidCount + additionalPaidAiAgentsCount
@@ -119,6 +122,7 @@ function AiAgentManagementDrawer({
     setEditingAgentId(null)
     setFormMode('form')
     setView('new')
+    setMutationError(null)
   }
 
   const handleShowEditForm = (agentId: string) => {
@@ -126,6 +130,7 @@ function AiAgentManagementDrawer({
     setEditingAgentId(agentId)
     setFormMode('form')
     setView('edit')
+    setMutationError(null)
   }
 
   const handleOpenDeleteConfirmation = () => {
@@ -139,46 +144,74 @@ function AiAgentManagementDrawer({
     setDeleteConfirmationAgentId(null)
   }
 
-  const handleConfirmDeleteAgent = () => {
-    if (deleteConfirmationAgent && agents.length > 1) {
-      onDeleteAgent(deleteConfirmationAgent.id)
+  const handleConfirmDeleteAgent = async () => {
+    if (!deleteConfirmationAgent || agents.length <= 1) {
+      handleCloseDeleteConfirmation()
+      return
     }
-    handleCloseDeleteConfirmation()
+
+    setIsMutating(true)
+    setMutationError(null)
+
+    try {
+      await onDeleteAgent(deleteConfirmationAgent.id)
+      handleCloseDeleteConfirmation()
+    } catch (error) {
+      setMutationError(error instanceof Error ? error.message : 'Failed to delete AI agent.')
+    } finally {
+      setIsMutating(false)
+    }
   }
 
   const handleCancelForm = () => {
     setEditingAgentId(null)
     setFormMode('form')
     setView('list')
+    setMutationError(null)
   }
 
-  const handleSubmitForm = (values: AiAgentFormValues) => {
+  const handleCreateAgentFormSubmit = async (values: AiAgentFormValues) => {
     const nextAgent: AiAgentRecord = {
       id:
-        view === 'edit' && editingAgent
-          ? editingAgent.id
-          : createAgentId(
-              values.name,
-              agents.map((agent) => agent.id),
-            ),
+        createAgentId(
+          values.name,
+          agents.map((agent) => agent.id),
+        ),
       name: values.name,
       subtitle: values.description || 'AI Agent configuration draft',
-      type: view === 'edit' && editingAgent ? editingAgent.type : 'AI Agent',
+      type: 'AI Agent',
       language: values.language,
       channelLabel: values.channel,
       channelCount: values.channel === 'Messaging' ? 0 : 1,
-      channelKinds:
-        view === 'edit' && editingAgent ? editingAgent.channelKinds : ['chat'],
+      channelKinds: ['chat'],
       paymentStatus: values.paymentStatus,
     }
 
-    if (view === 'edit') {
-      onUpdateAgent(nextAgent)
-    } else {
-      onCreateAgent(nextAgent)
-    }
+    setIsMutating(true)
+    setMutationError(null)
 
-    handleCancelForm()
+    try {
+      await onCreateAgent(nextAgent)
+      handleCancelForm()
+    } catch (error) {
+      setMutationError(error instanceof Error ? error.message : 'Failed to save AI agent.')
+    } finally {
+      setIsMutating(false)
+    }
+  }
+
+  const handleEditAgentSubmit = async (nextAgent: AiAgentRecord) => {
+    setIsMutating(true)
+    setMutationError(null)
+
+    try {
+      await onUpdateAgent(nextAgent)
+      handleCancelForm()
+    } catch (error) {
+      setMutationError(error instanceof Error ? error.message : 'Failed to save AI agent.')
+    } finally {
+      setIsMutating(false)
+    }
   }
 
   const columns: InstructionTableColumn<AiAgentTableRow>[] = [
@@ -336,7 +369,7 @@ function AiAgentManagementDrawer({
               alignItems="center"
               spacing={2}
             >
-              <Button variant="contained" onClick={handleShowNewForm}>
+              <Button variant="contained" onClick={handleShowNewForm} disabled={isMutating}>
                 New AI Agent
               </Button>
               <Typography
@@ -353,6 +386,12 @@ function AiAgentManagementDrawer({
                 </Box>
               </Typography>
             </Stack>
+
+            {mutationError ? (
+              <Typography variant="body2" color="error.main">
+                {mutationError}
+              </Typography>
+            ) : null}
 
             {loading ? (
               <Typography variant="body2" color="text.secondary">
@@ -388,22 +427,42 @@ function AiAgentManagementDrawer({
               />
             )}
           </Stack>
-        ) : (
-          <AiAgentForm
-            key={`${view}-${editingAgent?.id ?? 'new'}`}
-            initialName={editingAgent?.name ?? ''}
-            initialLanguage={editingAgent?.language && editingAgent.language !== '-' ? editingAgent.language : 'English'}
-            initialChannel={editingAgent?.channelLabel ?? 'Live Chat'}
-            initialDescription={editingAgent?.subtitle ?? ''}
-            initialPaymentStatus={editingAgent?.paymentStatus ?? 'Paid'}
+        ) : view === 'edit' && editingAgent ? (
+          <EditAiAgentFormSection
+            key={`${view}-${editingAgent.id}`}
+            agent={editingAgent}
             paidAgentCount={displayedPaidCount}
             paidAgentLimit={paidAiAgentsLimit}
-            submitLabel={view === 'new' ? 'Create' : 'Save'}
-            cancelLabel="Back"
+            submitting={isMutating}
+            submitError={mutationError}
             onModeChange={setFormMode}
-            onSubmit={handleSubmitForm}
+            onSubmitAgent={handleEditAgentSubmit}
             onCancel={handleCancelForm}
           />
+        ) : (
+          <Stack spacing={2}>
+            {mutationError ? (
+              <Typography variant="body2" color="error.main">
+                {mutationError}
+              </Typography>
+            ) : null}
+            <AiAgentForm
+              key={`${view}-${editingAgent?.id ?? 'new'}`}
+              initialName=""
+              initialLanguage="English"
+              initialChannel="Live Chat"
+              initialDescription=""
+              initialPaymentStatus="Paid"
+              paidAgentCount={displayedPaidCount}
+              paidAgentLimit={paidAiAgentsLimit}
+              submitLabel="Create"
+              cancelLabel="Back"
+              submitting={isMutating}
+              onModeChange={setFormMode}
+              onSubmit={handleCreateAgentFormSubmit}
+              onCancel={handleCancelForm}
+            />
+          </Stack>
         )}
       </SideDrawer>
 
@@ -417,17 +476,22 @@ function AiAgentManagementDrawer({
         <MenuItem
           onClick={() => {
             if (operationAgent) {
-              handleShowEditForm(operationAgent.id)
+              void handleShowEditForm(operationAgent.id)
             }
           }}
+          disabled={isMutating}
         >
           Edit
         </MenuItem>
-        <MenuItem onClick={handleCloseOperationsMenu}>AI Agent Import</MenuItem>
-        <MenuItem onClick={handleCloseOperationsMenu}>AI Agent Export</MenuItem>
+        <MenuItem onClick={handleCloseOperationsMenu} disabled={isMutating}>
+          AI Agent Import
+        </MenuItem>
+        <MenuItem onClick={handleCloseOperationsMenu} disabled={isMutating}>
+          AI Agent Export
+        </MenuItem>
         <MenuItem
           onClick={handleOpenDeleteConfirmation}
-          disabled={agents.length <= 1}
+          disabled={isMutating || agents.length <= 1}
           sx={{ color: 'error.main' }}
         >
           Delete
@@ -451,10 +515,15 @@ function AiAgentManagementDrawer({
           </Typography>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2.5 }}>
-          <Button variant="outlined" onClick={handleCloseDeleteConfirmation}>
+          <Button variant="outlined" onClick={handleCloseDeleteConfirmation} disabled={isMutating}>
             Cancel
           </Button>
-          <Button color="error" variant="contained" onClick={handleConfirmDeleteAgent}>
+          <Button
+            color="error"
+            variant="contained"
+            onClick={handleConfirmDeleteAgent}
+            disabled={isMutating}
+          >
             Delete
           </Button>
         </DialogActions>

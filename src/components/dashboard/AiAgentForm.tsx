@@ -44,6 +44,7 @@ type AiAgentFormProps = {
   paidAgentLimit?: number
   submitLabel?: string
   cancelLabel?: string
+  submitting?: boolean
   onModeChange?: (mode: 'form' | 'avatar') => void
   onSubmit: (values: AiAgentFormValues) => void
   onCancel: () => void
@@ -61,6 +62,7 @@ function AiAgentForm({
   paidAgentLimit = 101,
   submitLabel = 'Save',
   cancelLabel = 'Cancel',
+  submitting = false,
   onModeChange,
   onSubmit,
   onCancel,
@@ -206,10 +208,10 @@ function AiAgentForm({
         </Box>
 
         <Stack direction="row" spacing={2}>
-          <Button variant="contained" onClick={handleConfirmAvatar}>
+          <Button variant="contained" onClick={handleConfirmAvatar} disabled={submitting}>
             OK
           </Button>
-          <Button variant="outlined" onClick={handleCancelAvatarPicker}>
+          <Button variant="outlined" onClick={handleCancelAvatarPicker} disabled={submitting}>
             Cancel
           </Button>
         </Stack>
@@ -314,10 +316,14 @@ function AiAgentForm({
           </Box>
 
           <Stack direction="row" spacing={2} sx={{ pt: 1 }}>
-            <Button variant="contained" onClick={handleSubmit} disabled={name.trim().length === 0}>
+            <Button
+              variant="contained"
+              onClick={handleSubmit}
+              disabled={submitting || name.trim().length === 0}
+            >
               {submitLabel}
             </Button>
-            <Button variant="outlined" onClick={onCancel}>
+            <Button variant="outlined" onClick={onCancel} disabled={submitting}>
               {cancelLabel}
             </Button>
           </Stack>

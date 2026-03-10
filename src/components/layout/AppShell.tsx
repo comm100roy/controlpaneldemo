@@ -8,7 +8,12 @@ import {
   useMediaQuery,
   useTheme,
 } from '@mui/material'
-import { getAiAgents } from '../../api/aiAgents'
+import {
+  createAiAgent,
+  deleteAiAgent,
+  getAiAgents,
+  updateAiAgent,
+} from '../../api/aiAgents'
 import SidebarNav from '../sidebar/SidebarNav'
 import type { AiAgentRecord } from '../../data/aiAgents'
 import { getSiteIdFromPathname, resolveSiteId } from '../../data/routes'
@@ -60,21 +65,37 @@ function AppShell() {
     }
   }, [siteId])
 
+  const handleCreateAiAgent = async (agent: AiAgentRecord) => {
+    setAiAgentsError(null)
+    const createdAgent = await createAiAgent(siteId, agent)
+    setAiAgents((current) => [createdAgent, ...current])
+    return createdAgent
+  }
+
+  const handleUpdateAiAgent = async (agent: AiAgentRecord) => {
+    setAiAgentsError(null)
+    const updatedAgent = await updateAiAgent(siteId, agent)
+    setAiAgents((current) =>
+      current.map((currentAgent) => (currentAgent.id === updatedAgent.id ? updatedAgent : currentAgent)),
+    )
+    return updatedAgent
+  }
+
+  const handleDeleteAiAgent = async (agentId: string) => {
+    setAiAgentsError(null)
+    await deleteAiAgent(siteId, agentId)
+    setAiAgents((current) => current.filter((agent) => agent.id !== agentId))
+  }
+
   const drawerContent = (
     <SidebarNav
       onNavigate={() => setMobileOpen(false)}
       aiAgents={aiAgents}
       aiAgentsLoading={aiAgentsLoading}
       aiAgentsError={aiAgentsError}
-      onCreateAiAgent={(agent) => setAiAgents((current) => [agent, ...current])}
-      onUpdateAiAgent={(agent) =>
-        setAiAgents((current) =>
-          current.map((currentAgent) => (currentAgent.id === agent.id ? agent : currentAgent)),
-        )
-      }
-      onDeleteAiAgent={(agentId) =>
-        setAiAgents((current) => current.filter((agent) => agent.id !== agentId))
-      }
+      onCreateAiAgent={handleCreateAiAgent}
+      onUpdateAiAgent={handleUpdateAiAgent}
+      onDeleteAiAgent={handleDeleteAiAgent}
     />
   )
 
@@ -130,6 +151,7 @@ function AppShell() {
               aiAgents,
               aiAgentsLoading,
               aiAgentsError,
+              onUpdateAiAgent: handleUpdateAiAgent,
               mobileNavigationButton: (
                 <IconButton color="primary" onClick={() => setMobileOpen(true)}>
                   <MenuIcon />

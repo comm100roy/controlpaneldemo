@@ -23,6 +23,7 @@ type OverviewPageLayoutContext = {
   aiAgents?: AiAgentRecord[]
   aiAgentsLoading?: boolean
   aiAgentsError?: string | null
+  onUpdateAiAgent?: (agent: AiAgentRecord) => Promise<AiAgentRecord>
 }
 
 function OverviewPage() {
@@ -93,10 +94,6 @@ function OverviewPage() {
           }
         : metric,
   )
-
-  const agentName = resolvedAgentProfile.profile[0]?.value ?? selectedAiAgent.name
-  const agentLanguage = selectedAiAgent.language
-  const agentChannel = selectedAiAgent.channelLabel
 
   return (
     <>
@@ -208,10 +205,14 @@ function OverviewPage() {
         key={editDrawerSession}
         open={isEditDrawerOpen}
         onClose={() => setIsEditDrawerOpen(false)}
-        initialName={agentName}
-        initialLanguage={agentLanguage}
-        initialChannel={agentChannel}
-        initialDescription={resolvedAgentProfile.description}
+        agent={selectedAiAgent}
+        onSubmitAgent={async (agent) => {
+          if (!layoutContext?.onUpdateAiAgent) {
+            throw new Error('AI agent update is unavailable.')
+          }
+
+          return layoutContext.onUpdateAiAgent(agent)
+        }}
       />
       <CollectedLeadsDrawer
         open={isCollectedLeadsDrawerOpen}

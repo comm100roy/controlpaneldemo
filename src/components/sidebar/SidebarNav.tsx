@@ -50,9 +50,9 @@ type SidebarNavProps = {
   aiAgents: AiAgentRecord[]
   aiAgentsLoading: boolean
   aiAgentsError: string | null
-  onCreateAiAgent: (agent: AiAgentRecord) => void
-  onUpdateAiAgent: (agent: AiAgentRecord) => void
-  onDeleteAiAgent: (agentId: string) => void
+  onCreateAiAgent: (agent: AiAgentRecord) => Promise<AiAgentRecord>
+  onUpdateAiAgent: (agent: AiAgentRecord) => Promise<AiAgentRecord>
+  onDeleteAiAgent: (agentId: string) => Promise<void>
 }
 
 const channelAccentColors = [
@@ -172,22 +172,23 @@ function SidebarNav({
     setIsAiAgentManagementDrawerOpen(false)
   }
 
-  const handleCreateAiAgent = (agent: AiAgentRecord) => {
-    onCreateAiAgent(agent)
-    navigate(appRoutes.ai.aiAgentOverview(agent.id))
+  const handleCreateAiAgent = async (agent: AiAgentRecord) => {
+    const createdAgent = await onCreateAiAgent(agent)
+    navigate(appRoutes.ai.aiAgentOverview(createdAgent.id))
+    return createdAgent
   }
 
-  const handleUpdateAiAgent = (agent: AiAgentRecord) => {
-    onUpdateAiAgent(agent)
+  const handleUpdateAiAgent = async (agent: AiAgentRecord) => {
+    return onUpdateAiAgent(agent)
   }
 
-  const handleDeleteAiAgent = (agentId: string) => {
+  const handleDeleteAiAgent = async (agentId: string) => {
     if (aiAgents.length <= 1) {
       return
     }
 
     const remaining = aiAgents.filter((agent) => agent.id !== agentId)
-    onDeleteAiAgent(agentId)
+    await onDeleteAiAgent(agentId)
 
     if (currentAiAgentRouteId === agentId && remaining[0]) {
       navigate(appRoutes.ai.aiAgentOverview(remaining[0].id))
