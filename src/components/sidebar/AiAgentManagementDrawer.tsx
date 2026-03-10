@@ -48,25 +48,6 @@ type AiAgentTableRow = InstructionRow & AiAgentRecord
 
 type DrawerView = 'list' | 'new' | 'edit'
 
-const createAgentId = (name: string, existingIds: string[]) => {
-  const baseId =
-    name
-      .trim()
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '') || 'new-ai-agent'
-
-  let nextId = baseId
-  let counter = 2
-
-  while (existingIds.includes(nextId)) {
-    nextId = `${baseId}-${counter}`
-    counter += 1
-  }
-
-  return nextId
-}
-
 function AiAgentManagementDrawer({
   open,
   onClose,
@@ -172,11 +153,7 @@ function AiAgentManagementDrawer({
 
   const handleCreateAgentFormSubmit = async (values: AiAgentFormValues) => {
     const nextAgent: AiAgentRecord = {
-      id:
-        createAgentId(
-          values.name,
-          agents.map((agent) => agent.id),
-        ),
+      id: 'new',
       name: values.name,
       subtitle: values.description || 'AI Agent configuration draft',
       type: 'AI Agent',

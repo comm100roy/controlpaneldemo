@@ -1,9 +1,12 @@
 import { http, HttpResponse } from 'msw'
 import { aiAgentRecords, type AiAgentRecord } from '../../data/aiAgents'
 
+const createGuid = () => crypto.randomUUID()
+
 const createSeedAiAgents = () =>
   aiAgentRecords.map((agent) => ({
     ...agent,
+    id: createGuid(),
     channelKinds: [...agent.channelKinds],
   }))
 
@@ -60,19 +63,14 @@ export const aiAgentHandlers = [
     }
 
     const nextAgent = cloneAiAgent((await request.json()) as AiAgentRecord)
+    const createdAgent: AiAgentRecord = {
+      ...nextAgent,
+      id: createGuid(),
+    }
     const siteAiAgents = getSiteAiAgents(requiredSiteId.siteId)
 
-    if (siteAiAgents.some((agent) => agent.id === nextAgent.id)) {
-      return HttpResponse.json(
-        {
-          message: `AI agent "${nextAgent.id}" already exists.`,
-        },
-        { status: 409 },
-      )
-    }
-
-    siteAiAgents.unshift(nextAgent)
-    return HttpResponse.json(nextAgent, { status: 201 })
+    siteAiAgents.unshift(createdAgent)
+    return HttpResponse.json(createdAgent, { status: 201 })
   }),
 
   http.put('/api/aiagent/aiagents/:aiagentid', async ({ params, request }) => {

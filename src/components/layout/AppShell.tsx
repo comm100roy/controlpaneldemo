@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Outlet, useLocation } from 'react-router-dom'
+import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import MenuIcon from '@mui/icons-material/Menu'
 import {
   Box,
@@ -16,13 +16,14 @@ import {
 } from '../../api/aiAgents'
 import SidebarNav from '../sidebar/SidebarNav'
 import type { AiAgentRecord } from '../../data/aiAgents'
-import { getSiteIdFromPathname, resolveSiteId } from '../../data/routes'
+import { getSiteIdFromPathname, resolveSiteId, stripSitePrefix } from '../../data/routes'
 
 const drawerWidth = 320
 
 function AppShell() {
   const theme = useTheme()
   const location = useLocation()
+  const navigate = useNavigate()
   const isDesktop = useMediaQuery(theme.breakpoints.up('lg'))
   const [mobileOpen, setMobileOpen] = useState(false)
   const [aiAgents, setAiAgents] = useState<AiAgentRecord[]>([])
@@ -64,6 +65,49 @@ function AppShell() {
       cancelled = true
     }
   }, [siteId])
+
+  useEffect(() => {
+    if (aiAgentsLoading || aiAgentsError || aiAgents.length === 0) {
+      return
+    }
+
+    const appPath = stripSitePrefix(location.pathname)
+    const pathSegments = appPath.split('/').filter(Boolean)
+    const isAiAgentRoute = pathSegments[0] === 'ai' && pathSegments[1] === 'aiagent'
+
+    if (!isAiAgentRoute) {
+      return
+    }
+
+    const pathAiAgentId = pathSegments[2]
+    if (pathAiAgentId && aiAgents.some((agent) => agent.id === pathAiAgentId)) {
+      return
+    }
+
+    const firstAiAgentId = aiAgents[0]?.id
+    if (!firstAiAgentId) {
+      return
+    }
+
+    const suffixSegments = pathSegments.slice(3)
+    const nextAppPath =
+      suffixSegments.length > 0
+        ? `/ai/aiagent/${firstAiAgentId}/${suffixSegments.join('/')}`
+        : `/ai/aiagent/${firstAiAgentId}/overview`
+
+    navigate(`/ui/${siteId}${nextAppPath}${location.search}${location.hash}`, {
+      replace: true,
+    })
+  }, [
+    aiAgents,
+    aiAgentsError,
+    aiAgentsLoading,
+    location.hash,
+    location.pathname,
+    location.search,
+    navigate,
+    siteId,
+  ])
 
   const handleCreateAiAgent = async (agent: AiAgentRecord) => {
     setAiAgentsError(null)
