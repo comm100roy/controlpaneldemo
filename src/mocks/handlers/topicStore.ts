@@ -1,7 +1,7 @@
 import {
-  rootTopicCategoryId,
   seedTopicCategories,
   seedTopicDefinitions,
+  type TopicCategorySeed,
   type TopicCategory,
   type TopicDefinition,
 } from '../../data/topics'
@@ -9,6 +9,7 @@ import {
   cloneTopicCategories,
   collectTopicCategoryIds,
   findTopicCategoryById,
+  getRootTopicCategoryId,
   insertTopicCategory,
   moveTopicCategoryTree,
   removeTopicCategoryTree,
@@ -21,6 +22,7 @@ type ScopedTopicState = {
 }
 
 const topicsByScope = new Map<string, ScopedTopicState>()
+const createGuid = () => crypto.randomUUID()
 
 const cloneTopicDefinition = (topic: TopicDefinition): TopicDefinition => ({
   ...topic,
@@ -29,15 +31,45 @@ const cloneTopicDefinition = (topic: TopicDefinition): TopicDefinition => ({
 
 const cloneTopicDefinitions = (topics: TopicDefinition[]) => topics.map(cloneTopicDefinition)
 
-const createSeedTopicState = (): ScopedTopicState => ({
-  categories: cloneTopicCategories(seedTopicCategories),
-  topics: cloneTopicDefinitions(seedTopicDefinitions),
-})
+const materializeSeedCategories = (
+  categorySeeds: TopicCategorySeed[],
+  categoryIdBySeedId: Map<string, string>,
+): TopicCategory[] =>
+  categorySeeds.map((categorySeed) => {
+    const categoryId = createGuid()
+    categoryIdBySeedId.set(categorySeed.seedId, categoryId)
+
+    return {
+      id: categoryId,
+      label: categorySeed.label,
+      children: categorySeed.children
+        ? materializeSeedCategories(categorySeed.children, categoryIdBySeedId)
+        : undefined,
+    }
+  })
+
+const createSeedTopicState = (): ScopedTopicState => {
+  const categoryIdBySeedId = new Map<string, string>()
+  const categories = materializeSeedCategories(seedTopicCategories, categoryIdBySeedId)
+
+  return {
+    categories,
+    topics: seedTopicDefinitions.map((topicSeed) => ({
+      id: createGuid(),
+      name: topicSeed.name,
+      description: topicSeed.description,
+      categoryId: categoryIdBySeedId.get(topicSeed.categorySeedId) ?? '',
+      answerMode: topicSeed.answerMode,
+      naturalLanguageInstructions: topicSeed.naturalLanguageInstructions,
+      functionIds: [...topicSeed.functionIds],
+    })),
+  }
+}
 
 const createEmptyTopicState = (): ScopedTopicState => ({
   categories: [
     {
-      id: rootTopicCategoryId,
+      id: createGuid(),
       label: '/',
       children: [],
     },
@@ -89,8 +121,9 @@ export const updateScopedTopicCategory = (
   nextParentId: string,
 ) => {
   const scopedState = getScopedTopicState(siteId, aiAgentId)
+  const rootCategoryId = getRootTopicCategoryId(scopedState.categories)
   const currentParentId =
-    findTopicCategoryById(scopedState.categories, categoryId)?.parentId ?? rootTopicCategoryId
+    findTopicCategoryById(scopedState.categories, categoryId)?.parentId ?? rootCategoryId ?? ''
 
   const renamedCategories = updateTopicCategoryTree(scopedState.categories, categoryId, (category) => ({
     ...category,
@@ -105,9 +138,10 @@ export const updateScopedTopicCategory = (
 
 export const deleteScopedTopicCategory = (siteId: string, aiAgentId: string, categoryId: string) => {
   const scopedState = getScopedTopicState(siteId, aiAgentId)
+  const rootCategoryId = getRootTopicCategoryId(scopedState.categories)
   const { removed, nextCategories } = removeTopicCategoryTree(scopedState.categories, categoryId)
 
-  if (!removed) {
+  if (!removed || !rootCategoryId) {
     return null
   }
 
@@ -118,7 +152,7 @@ export const deleteScopedTopicCategory = (siteId: string, aiAgentId: string, cat
     removedCategoryIds.has(topic.categoryId)
       ? {
           ...topic,
-          categoryId: rootTopicCategoryId,
+          categoryId: rootCategoryId,
         }
       : topic,
   )

@@ -50,7 +50,6 @@ import DataTable, {
 } from '../../../../components/common/DataTable'
 import TestChatDrawer from '../../../../components/common/TestChatDrawer'
 import {
-  rootTopicCategoryId,
   type TopicCategory,
   type TopicDefinition,
 } from '../../../../data/topics'
@@ -58,6 +57,7 @@ import {
   buildTopicCategoryOptions,
   collectTopicCategoryIds,
   findTopicCategoryById,
+  getRootTopicCategoryId,
   insertTopicCategory,
   moveTopicCategoryTree,
   removeTopicCategoryTree,
@@ -98,7 +98,7 @@ const allCategoriesNode: TopicCategory = {
   label: 'All Categories',
 }
 
-const createTopicDraft = (categoryId: string = rootTopicCategoryId): TopicDraft => ({
+const createTopicDraft = (categoryId = ''): TopicDraft => ({
   name: '',
   categoryId,
   description: '',
@@ -122,7 +122,7 @@ function TopicTreeItem({
   const isExpanded = expandedCategoryIds.includes(node.id)
   const isSelected = selectedCategoryId === node.id
   const isAllCategories = node.id === 'all'
-  const isRootCategory = node.id === 'root'
+  const isRootCategory = !isAllCategories && !parentId
   const canCreateCategory = !isAllCategories
   const canEditOrDeleteCategory = !isAllCategories && !isRootCategory && Boolean(parentId)
   const showHoverActions = canCreateCategory || canEditOrDeleteCategory
@@ -286,7 +286,7 @@ function TopicsPage() {
   const [isTestDrawerOpen, setIsTestDrawerOpen] = useState(false)
   const [searchValue, setSearchValue] = useState('')
   const [selectedCategoryId, setSelectedCategoryId] = useState('all')
-  const [expandedCategoryIds, setExpandedCategoryIds] = useState<string[]>([rootTopicCategoryId])
+  const [expandedCategoryIds, setExpandedCategoryIds] = useState<string[]>([])
   const [categories, setCategories] = useState<TopicCategory[]>([])
   const [topics, setTopics] = useState<TopicDefinition[]>([])
   const [loading, setLoading] = useState(true)
@@ -306,7 +306,7 @@ function TopicsPage() {
   const [isDeletingCategory, setIsDeletingCategory] = useState(false)
   const [categoryDraft, setCategoryDraft] = useState<CategoryFormValues>({
     name: '',
-    parentId: rootTopicCategoryId,
+    parentId: '',
   })
   const locationState = location.state as { successMessage?: string } | null
 
@@ -356,6 +356,8 @@ function TopicsPage() {
     navigate(`${location.pathname}${location.search}`, { replace: true, state: null })
   }, [location.pathname, location.search, locationState?.successMessage, navigate])
 
+  const rootCategoryId = useMemo(() => getRootTopicCategoryId(categories) ?? '', [categories])
+
   useEffect(() => {
     if (selectedCategoryId === 'all') {
       return
@@ -371,11 +373,25 @@ function TopicsPage() {
       return
     }
 
+    if (!rootCategoryId) {
+      return
+    }
+
     setTopicDraft((current) => ({
       ...current,
-      categoryId: rootTopicCategoryId,
+      categoryId: rootCategoryId,
     }))
-  }, [categories, topicDraft.categoryId])
+  }, [categories, rootCategoryId, topicDraft.categoryId])
+
+  useEffect(() => {
+    if (!rootCategoryId) {
+      return
+    }
+
+    setExpandedCategoryIds((current) =>
+      current.includes(rootCategoryId) ? current : [rootCategoryId, ...current],
+    )
+  }, [rootCategoryId])
 
   useEffect(() => {
     if (!isDesktop || !isResizing) {
@@ -467,7 +483,7 @@ function TopicsPage() {
     setEditingCategoryId(null)
     setCategoryDraft({
       name: '',
-      parentId: parentId === 'all' ? rootTopicCategoryId : parentId,
+      parentId: parentId === 'all' ? rootCategoryId : parentId,
     })
   }
 
@@ -481,7 +497,7 @@ function TopicsPage() {
     setEditingCategoryId(categoryId)
     setCategoryDraft({
       name: categoryMatch.node.label,
-      parentId: categoryMatch.parentId ?? rootTopicCategoryId,
+      parentId: categoryMatch.parentId ?? rootCategoryId,
     })
   }
 
@@ -524,7 +540,7 @@ function TopicsPage() {
       }
 
       const currentParentId =
-        findTopicCategoryById(categories, editingCategoryId)?.parentId ?? rootTopicCategoryId
+        findTopicCategoryById(categories, editingCategoryId)?.parentId ?? rootCategoryId
 
       await updateTopicCategory(siteId, resolvedAiAgentId, editingCategoryId, {
         label: trimmedName,
@@ -556,7 +572,7 @@ function TopicsPage() {
     const nextCategoryId =
       selectedCategoryId !== 'all' && findTopicCategoryById(categories, selectedCategoryId)
         ? selectedCategoryId
-        : rootTopicCategoryId
+        : rootCategoryId
 
     setTopicDraft(createTopicDraft(nextCategoryId))
     setIsTopicDrawerOpen(true)
@@ -657,7 +673,7 @@ function TopicsPage() {
             removedCategoryIds.has(topic.categoryId)
               ? {
                   ...topic,
-                  categoryId: rootTopicCategoryId,
+                  categoryId: rootCategoryId,
                 }
               : topic,
           ),
