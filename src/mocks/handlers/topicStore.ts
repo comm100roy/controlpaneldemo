@@ -1,10 +1,12 @@
 import {
-  seedTopicCategories,
   seedTopicDefinitions,
-  type TopicCategorySeed,
-  type TopicCategory,
   type TopicDefinition,
 } from '../../data/topics'
+import {
+  seedTopicCategories,
+  type TopicCategorySeed,
+  type TopicCategory,
+} from '../../data/topicCategories'
 import {
   cloneTopicCategories,
   collectTopicCategoryIds,

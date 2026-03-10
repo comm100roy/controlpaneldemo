@@ -1,4 +1,4 @@
-import type { TopicCategory } from './topics'
+import type { TopicCategory } from './topicCategories'
 
 export const cloneTopicCategories = (categories: TopicCategory[]): TopicCategory[] =>
   categories.map((category) => ({

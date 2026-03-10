@@ -13,15 +13,16 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import { getTopic, getTopicCategories, updateTopic } from '../../../../api/topics'
+import { getTopicCategories } from '../../../../api/topicCategories'
+import { getTopic, updateTopic } from '../../../../api/topics'
 import Page from '../../../../components/common/Page'
 import TestChatDrawer from '../../../../components/common/TestChatDrawer'
 import AnswerEditorCard from '../../../../components/topics/AnswerEditorCard'
 import {
   type TopicAnswerMode,
-  type TopicCategory,
   type TopicDefinition,
 } from '../../../../data/topics'
+import { type TopicCategory } from '../../../../data/topicCategories'
 import { buildTopicCategoryOptions } from '../../../../data/topicUtils'
 import {
   appRoutes,

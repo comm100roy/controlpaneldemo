@@ -31,13 +31,15 @@ import {
 } from '@mui/material'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import {
-  createTopic,
   createTopicCategory,
-  deleteTopic,
   deleteTopicCategory,
   getTopicCategories,
-  getTopics,
   updateTopicCategory,
+} from '../../../../api/topicCategories'
+import {
+  createTopic,
+  deleteTopic,
+  getTopics,
 } from '../../../../api/topics'
 import Page from '../../../../components/common/Page'
 import SideDrawer from '../../../../components/common/SideDrawer'
@@ -50,9 +52,9 @@ import DataTable, {
 } from '../../../../components/common/DataTable'
 import TestChatDrawer from '../../../../components/common/TestChatDrawer'
 import {
-  type TopicCategory,
   type TopicDefinition,
 } from '../../../../data/topics'
+import { type TopicCategory } from '../../../../data/topicCategories'
 import {
   buildTopicCategoryOptions,
   collectTopicCategoryIds,

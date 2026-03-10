@@ -1,5 +1,6 @@
 import { http, HttpResponse } from 'msw'
-import { type TopicCategory, type TopicDefinition } from '../../data/topics'
+import { type TopicDefinition } from '../../data/topics'
+import { type TopicCategory } from '../../data/topicCategories'
 import { findTopicCategoryById, getRootTopicCategoryId } from '../../data/topicUtils'
 import {
   createScopedTopic,
