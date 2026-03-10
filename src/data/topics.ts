@@ -1,9 +1,3 @@
-export type TopicCategory = {
-  id: string
-  label: string
-  children?: TopicCategory[]
-}
-
 export type TopicAnswerMode = 'workflow' | 'natural-language'
 
 export type TopicDefinition = {
@@ -16,12 +10,6 @@ export type TopicDefinition = {
   functionIds: string[]
 }
 
-export type TopicCategorySeed = {
-  seedId: string
-  label: string
-  children?: TopicCategorySeed[]
-}
-
 export type TopicDefinitionSeed = {
   seedId: string
   name: string
@@ -31,19 +19,6 @@ export type TopicDefinitionSeed = {
   naturalLanguageInstructions: string
   functionIds: string[]
 }
-
-export const seedTopicCategories: TopicCategorySeed[] = [
-  {
-    seedId: 'root',
-    label: '/',
-    children: [
-      {
-        seedId: 'temp',
-        label: 'Temp',
-      },
-    ],
-  },
-]
 
 export const seedTopicDefinitions: TopicDefinitionSeed[] = [
   {
