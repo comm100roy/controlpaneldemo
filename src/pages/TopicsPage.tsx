@@ -30,9 +30,9 @@ import CategoryForm, {
   type CategoryFormOption,
   type CategoryFormValues,
 } from '../components/topics/CategoryForm'
-import InstructionTable, {
+import DataTable, {
   type InstructionRow,
-} from '../components/dashboard/InstructionTable'
+} from '../components/dashboard/DataTable'
 import TestChatDrawer from '../components/common/TestChatDrawer'
 import {
   topicCategories,
@@ -675,7 +675,7 @@ function TopicsPage() {
           </Box>
 
           <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-            <InstructionTable
+            <DataTable
               rows={visibleRows}
               nameHeader="Name"
               secondaryHeader="Answer Type"

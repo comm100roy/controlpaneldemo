@@ -21,10 +21,10 @@ import {
   Typography,
 } from '@mui/material'
 import AiAgentForm, { type AiAgentFormValues } from '../dashboard/AiAgentForm'
-import InstructionTable, {
+import DataTable, {
   type InstructionRow,
   type InstructionTableColumn,
-} from '../dashboard/InstructionTable'
+} from '../dashboard/DataTable'
 import SideDrawer from '../common/SideDrawer'
 import {
   additionalPaidAiAgentsCount,
@@ -350,7 +350,7 @@ function AiAgentManagementDrawer({
               </Typography>
             </Stack>
 
-            <InstructionTable
+            <DataTable
               rows={rows}
               columns={columns}
               showOperations={false}

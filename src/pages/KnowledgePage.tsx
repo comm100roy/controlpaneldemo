@@ -31,10 +31,10 @@ import NewSnippetContentDrawer from '../components/knowledge/NewSnippetContentDr
 import NewWebpageContentDrawer from '../components/knowledge/NewWebpageContentDrawer'
 import Page from '../components/common/Page'
 import TestChatDrawer from '../components/common/TestChatDrawer'
-import InstructionTable, {
+import DataTable, {
   type InstructionTableBatchAction,
   type InstructionTableColumn,
-} from '../components/dashboard/InstructionTable'
+} from '../components/dashboard/DataTable'
 import StatsGrid from '../components/dashboard/StatsGrid'
 import { knowledgeRows as initialKnowledgeRows, type KnowledgeRow } from '../data/dashboard'
 
@@ -381,7 +381,7 @@ function KnowledgePage() {
         </Popover>
 
         <Box sx={{ mt: -1.5 }}>
-          <InstructionTable
+          <DataTable
             rows={filteredRows}
             columns={columns}
             selectable

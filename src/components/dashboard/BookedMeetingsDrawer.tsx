@@ -5,10 +5,10 @@ import { DateRangePicker } from '@mui/x-date-pickers-pro/DateRangePicker'
 import { Stack, Typography } from '@mui/material'
 import dayjs, { type Dayjs } from 'dayjs'
 import SideDrawer from '../common/SideDrawer'
-import InstructionTable, {
+import DataTable, {
   type InstructionRow,
   type InstructionTableColumn,
-} from './InstructionTable'
+} from './DataTable'
 
 type DateRangeValue = [Dayjs | null, Dayjs | null]
 
@@ -105,7 +105,7 @@ function BookedMeetingsDrawer({ open, onClose }: BookedMeetingsDrawerProps) {
           </LocalizationProvider>
         </Stack>
 
-        <InstructionTable
+        <DataTable
           rows={bookedMeetingRows}
           columns={bookedMeetingColumns}
           emptyStateMinHeight={380}

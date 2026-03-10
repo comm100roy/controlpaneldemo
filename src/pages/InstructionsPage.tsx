@@ -24,14 +24,14 @@ import { Link as RouterLink, useParams } from 'react-router-dom'
 import Page from '../components/common/Page'
 import SideDrawer from '../components/common/SideDrawer'
 import TestChatDrawer from '../components/common/TestChatDrawer'
-import InstructionTable from '../components/dashboard/InstructionTable'
+import DataTable from '../components/dashboard/DataTable'
 import {
   instructionRows as initialInstructionRows,
   instructionTemplates,
   type InstructionTemplate,
 } from '../data/dashboard'
 import { appRoutes, resolveAiAgentId } from '../data/routes'
-import type { InstructionRow } from '../components/dashboard/InstructionTable'
+import type { InstructionRow } from '../components/dashboard/DataTable'
 
 type DrawerView = 'templates' | 'form' | null
 const maxInstructions = 20
@@ -184,7 +184,7 @@ function InstructionsPage() {
           </Typography>
         </Stack>
         <Box sx={{ mt: -1.5 }}>
-          <InstructionTable
+          <DataTable
             rows={rows}
             onEdit={handleEditInstruction}
             onDelete={handleRequestDeleteInstruction}

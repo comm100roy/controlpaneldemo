@@ -15,10 +15,10 @@ import {
 } from '@mui/material'
 import { Link as RouterLink, useNavigate } from 'react-router-dom'
 import { AiInsightsInfoBanner } from '../components/common/AiInsightsElements'
-import InstructionTable, {
+import DataTable, {
   type InstructionRow,
   type InstructionTableColumn,
-} from '../components/dashboard/InstructionTable'
+} from '../components/dashboard/DataTable'
 import Page from '../components/common/Page'
 import { spotlightDefinitions, type SpotlightCampaign } from '../data/aiInsights'
 import { appRoutes } from '../data/routes'
@@ -186,7 +186,7 @@ function SpotlightsPage() {
             </Button>
           </Box>
 
-          <InstructionTable
+          <DataTable
             rows={rows}
             columns={spotlightColumns}
             onEdit={(row) => navigate(appRoutes.ai.aiInsightsSpotlightEdit(row.id))}

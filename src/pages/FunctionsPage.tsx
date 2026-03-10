@@ -4,7 +4,7 @@ import { Box, Button, Link, Stack, Typography } from '@mui/material'
 import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom'
 import Page from '../components/common/Page'
 import TestChatDrawer from '../components/common/TestChatDrawer'
-import InstructionTable from '../components/dashboard/InstructionTable'
+import DataTable from '../components/dashboard/DataTable'
 import { functionRows } from '../data/dashboard'
 import { appRoutes, resolveAiAgentId } from '../data/routes'
 
@@ -50,7 +50,7 @@ function FunctionsPage() {
         </Box>
 
         <Box sx={{ mt: -1.5 }}>
-          <InstructionTable
+          <DataTable
             rows={functionRows}
             nameHeader="Name"
             secondaryHeader="Used in Topics"

@@ -45,7 +45,7 @@ export type InstructionTableBatchAction<Row extends InstructionRow = Instruction
   onClick: (selectedRows: Row[]) => void
 }
 
-type InstructionTableProps<Row extends InstructionRow = InstructionRow> = {
+type DataTableProps<Row extends InstructionRow = InstructionRow> = {
   rows: Row[]
   nameHeader?: string
   secondaryHeader?: string
@@ -62,7 +62,7 @@ type InstructionTableProps<Row extends InstructionRow = InstructionRow> = {
   emptyStateMinHeight?: number
 }
 
-function InstructionTable<Row extends InstructionRow>({
+function DataTable<Row extends InstructionRow = InstructionRow>({
   rows,
   nameHeader = 'Instruction',
   secondaryHeader,
@@ -77,7 +77,7 @@ function InstructionTable<Row extends InstructionRow>({
   emptyStateMessage = 'No records found.',
   emptyStateIcon,
   emptyStateMinHeight = 320,
-}: InstructionTableProps<Row>) {
+}: DataTableProps<Row>) {
   type SortDirection = 'asc' | 'desc'
 
   const headerCellSx = {
@@ -434,4 +434,4 @@ function InstructionTable<Row extends InstructionRow>({
   )
 }
 
-export default InstructionTable
+export default DataTable

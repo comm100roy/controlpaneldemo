@@ -1,9 +1,9 @@
 import { Typography } from '@mui/material'
 import SideDrawer from '../common/SideDrawer'
-import InstructionTable, {
+import DataTable, {
   type InstructionRow,
   type InstructionTableColumn,
-} from './InstructionTable'
+} from './DataTable'
 
 type CollectedLeadRow = InstructionRow & {
   email: string
@@ -49,7 +49,7 @@ function CollectedLeadsDrawer({ open, onClose }: CollectedLeadsDrawerProps) {
       title="Collected Leads"
       width={{ xs: '100%', lg: 1024 }}
     >
-      <InstructionTable
+      <DataTable
         rows={collectedLeadRows}
         columns={collectedLeadColumns}
         emptyStateMinHeight={380}
