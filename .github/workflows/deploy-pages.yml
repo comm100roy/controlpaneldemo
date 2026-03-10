@@ -35,6 +35,8 @@ jobs:
         run: npm ci
 
       - name: Build app
+        env:
+          VITE_ENABLE_MSW: 'true'
         run: npm run build
 
       - name: Upload Pages artifact

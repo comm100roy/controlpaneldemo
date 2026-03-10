@@ -593,38 +593,38 @@ function TopicsPage() {
           </Stack>
         }
       >
-        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mt: -1 }}>
-          <Button variant="contained" onClick={handleOpenTopicDrawer}>
-            New Topic
-          </Button>
-          <TextField
-            size="small"
-            placeholder="Search topic"
-            value={searchValue}
-            onChange={(event) => setSearchValue(event.target.value)}
-            sx={{
-              width: { xs: '100%', sm: 260 },
-              '& .MuiOutlinedInput-root': {
-                bgcolor: 'common.white',
-              },
-            }}
-            InputProps={{
-              startAdornment: <SearchOutlinedIcon color="action" sx={{ mr: 1 }} />,
-            }}
-          />
-        </Stack>
+        <Stack spacing={1.5} sx={{ mt: -1 }}>
+          <Stack direction="row" justifyContent="space-between" alignItems="center">
+            <Button variant="contained" onClick={handleOpenTopicDrawer}>
+              New Topic
+            </Button>
+            <TextField
+              size="small"
+              placeholder="Search topic"
+              value={searchValue}
+              onChange={(event) => setSearchValue(event.target.value)}
+              sx={{
+                width: { xs: '100%', sm: 260 },
+                '& .MuiOutlinedInput-root': {
+                  bgcolor: 'common.white',
+                },
+              }}
+              InputProps={{
+                startAdornment: <SearchOutlinedIcon color="action" sx={{ mr: 1 }} />,
+              }}
+            />
+          </Stack>
 
-        <Stack
-          ref={layoutRef}
-          direction={{ xs: 'column', lg: 'row' }}
-          alignItems="stretch"
-          sx={{
-            mt: -1,
-            columnGap: { xs: 0, lg: 0.5 },
-            rowGap: 1.75,
-            userSelect: isResizing ? 'none' : 'auto',
-          }}
-        >
+          <Stack
+            ref={layoutRef}
+            direction={{ xs: 'column', lg: 'row' }}
+            alignItems="stretch"
+            sx={{
+              columnGap: { xs: 0, lg: 0.5 },
+              rowGap: 1.75,
+              userSelect: isResizing ? 'none' : 'auto',
+            }}
+          >
           <Card
             sx={{
               width: { xs: '100%', lg: categoryPanelWidth },
@@ -655,50 +655,51 @@ function TopicsPage() {
             </CardContent>
           </Card>
 
-          <Box
-            onMouseDown={() => setIsResizing(true)}
-            sx={{
-              display: { xs: 'none', lg: 'flex' },
-              width: 8,
-              flexShrink: 0,
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'col-resize',
-              color: isResizing ? 'text.primary' : 'text.secondary',
-            }}
-          >
-            <Stack spacing={0.35} alignItems="center">
-              <Box sx={{ width: 3, height: 3, borderRadius: '50%', bgcolor: 'currentColor' }} />
-              <Box sx={{ width: 3, height: 3, borderRadius: '50%', bgcolor: 'currentColor' }} />
-              <Box sx={{ width: 3, height: 3, borderRadius: '50%', bgcolor: 'currentColor' }} />
-            </Stack>
-          </Box>
+            <Box
+              onMouseDown={() => setIsResizing(true)}
+              sx={{
+                display: { xs: 'none', lg: 'flex' },
+                width: 8,
+                flexShrink: 0,
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'col-resize',
+                color: isResizing ? 'text.primary' : 'text.secondary',
+              }}
+            >
+              <Stack spacing={0.35} alignItems="center">
+                <Box sx={{ width: 3, height: 3, borderRadius: '50%', bgcolor: 'currentColor' }} />
+                <Box sx={{ width: 3, height: 3, borderRadius: '50%', bgcolor: 'currentColor' }} />
+                <Box sx={{ width: 3, height: 3, borderRadius: '50%', bgcolor: 'currentColor' }} />
+              </Stack>
+            </Box>
 
-          <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-            <DataTable
-              rows={visibleRows}
-              nameHeader="Name"
-              secondaryHeader="Answer Type"
-              onEdit={(row) =>
-                navigate(appRoutes.ai.aiAgentTopicEdit(row.id, resolvedAiAgentId))
-              }
-              onDelete={handleDeleteTopic}
-              footer={
-                <Box
-                  sx={{
-                    px: 2,
-                    py: 1.25,
-                    display: 'flex',
-                    justifyContent: 'flex-end',
-                  }}
-                >
-                  <Typography variant="caption" color="text.secondary">
-                    Rows per page: 50&nbsp;&nbsp;&nbsp; 1-{visibleRows.length} of {visibleRows.length}
-                  </Typography>
-                </Box>
-              }
-            />
-          </Box>
+            <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+              <DataTable
+                rows={visibleRows}
+                nameHeader="Name"
+                secondaryHeader="Answer Type"
+                onEdit={(row) =>
+                  navigate(appRoutes.ai.aiAgentTopicEdit(row.id, resolvedAiAgentId))
+                }
+                onDelete={handleDeleteTopic}
+                footer={
+                  <Box
+                    sx={{
+                      px: 2,
+                      py: 1.25,
+                      display: 'flex',
+                      justifyContent: 'flex-end',
+                    }}
+                  >
+                    <Typography variant="caption" color="text.secondary">
+                      Rows per page: 50&nbsp;&nbsp;&nbsp; 1-{visibleRows.length} of {visibleRows.length}
+                    </Typography>
+                  </Box>
+                }
+              />
+            </Box>
+          </Stack>
         </Stack>
       </Page>
       <TestChatDrawer

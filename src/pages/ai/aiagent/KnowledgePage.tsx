@@ -281,43 +281,67 @@ function KnowledgePage() {
       >
         <StatsGrid title="Data Sources:" stats={stats} />
 
-        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mt: -1 }}>
-          <Button variant="contained" onClick={handleOpenNewContentPopover}>
-            New Content
-          </Button>
-          <Stack direction="row" spacing={1.5}>
-            <TextField
-              select
-              size="small"
-              value={selectedType}
-              onChange={(event) => setSelectedType(event.target.value)}
-              sx={{
-                minWidth: 160,
-                '& .MuiOutlinedInput-root': {
-                  bgcolor: 'common.white',
-                },
-              }}
-            >
-              <MenuItem value="All">Type</MenuItem>
-              <MenuItem value="File">File</MenuItem>
-              <MenuItem value="Snippet">Snippet</MenuItem>
-            </TextField>
-            <TextField
-              size="small"
-              placeholder="Search"
-              value={searchValue}
-              onChange={(event) => setSearchValue(event.target.value)}
-              sx={{
-                width: 260,
-                '& .MuiOutlinedInput-root': {
-                  bgcolor: 'common.white',
-                },
-              }}
-              InputProps={{
-                startAdornment: <SearchOutlinedIcon color="action" sx={{ mr: 1 }} />,
-              }}
-            />
+        <Stack spacing={1.5} sx={{ mt: -1 }}>
+          <Stack direction="row" justifyContent="space-between" alignItems="center">
+            <Button variant="contained" onClick={handleOpenNewContentPopover}>
+              New Content
+            </Button>
+            <Stack direction="row" spacing={1.5}>
+              <TextField
+                select
+                size="small"
+                value={selectedType}
+                onChange={(event) => setSelectedType(event.target.value)}
+                sx={{
+                  minWidth: 160,
+                  '& .MuiOutlinedInput-root': {
+                    bgcolor: 'common.white',
+                  },
+                }}
+              >
+                <MenuItem value="All">Type</MenuItem>
+                <MenuItem value="File">File</MenuItem>
+                <MenuItem value="Snippet">Snippet</MenuItem>
+              </TextField>
+              <TextField
+                size="small"
+                placeholder="Search"
+                value={searchValue}
+                onChange={(event) => setSearchValue(event.target.value)}
+                sx={{
+                  width: 260,
+                  '& .MuiOutlinedInput-root': {
+                    bgcolor: 'common.white',
+                  },
+                }}
+                InputProps={{
+                  startAdornment: <SearchOutlinedIcon color="action" sx={{ mr: 1 }} />,
+                }}
+              />
+            </Stack>
           </Stack>
+
+          <DataTable
+            rows={filteredRows}
+            columns={columns}
+            selectable
+            showOperations={false}
+            batchActions={batchActions}
+            footer={
+              <Box
+                sx={{
+                  px: 2,
+                  py: 1.25,
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                }}
+              >
+                <Typography variant="caption" color="text.secondary">
+                  Rows per page: 10&nbsp;&nbsp;&nbsp; 1-{filteredRows.length} of {filteredRows.length}
+                </Typography>
+              </Box>
+            }
+          />
         </Stack>
 
         <Popover
@@ -380,29 +404,6 @@ function KnowledgePage() {
           </Stack>
         </Popover>
 
-        <Box sx={{ mt: -1.5 }}>
-          <DataTable
-            rows={filteredRows}
-            columns={columns}
-            selectable
-            showOperations={false}
-            batchActions={batchActions}
-            footer={
-              <Box
-                sx={{
-                  px: 2,
-                  py: 1.25,
-                  display: 'flex',
-                  justifyContent: 'flex-end',
-                }}
-              >
-                <Typography variant="caption" color="text.secondary">
-                  Rows per page: 10&nbsp;&nbsp;&nbsp; 1-{filteredRows.length} of {filteredRows.length}
-                </Typography>
-              </Box>
-            }
-          />
-        </Box>
       </Page>
       <NewWebpageContentDrawer
         open={isNewWebpageDrawerOpen}

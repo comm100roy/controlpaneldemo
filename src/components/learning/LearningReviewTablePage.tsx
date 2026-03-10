@@ -77,93 +77,95 @@ function LearningReviewTablePage<Row extends InstructionRow>({
 
   return (
     <Page title={title} description={description}>
-      <Stack
-        direction={{ xs: 'column', lg: 'row' }}
-        justifyContent="space-between"
-        alignItems={{ xs: 'stretch', lg: 'center' }}
-        spacing={2}
-        sx={{ mt: -1 }}
-      >
-        <Button
-          variant="outlined"
-          startIcon={<DownloadOutlinedIcon />}
-          sx={{ alignSelf: { xs: 'flex-start', lg: 'center' } }}
+      <Stack spacing={1.5}>
+        <Stack
+          direction={{ xs: 'column', lg: 'row' }}
+          justifyContent="space-between"
+          alignItems={{ xs: 'stretch', lg: 'center' }}
+          spacing={2}
+          sx={{ mt: -1 }}
         >
-          Export
-        </Button>
-        <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5}>
-          <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <DateRangePicker
-              value={dateRange}
-              onChange={(newValue) => setDateRange(newValue)}
-              format="YYYY/MM/DD"
-              slotProps={{
-                field: {
-                  dateSeparator: ' — ',
-                },
-                textField: {
-                  size: 'small',
-                  sx: {
-                    minWidth: { xs: '100%', md: 260 },
-                    '& .MuiPickersOutlinedInput-root': {
-                      bgcolor: 'common.white',
-                      borderRadius: 1,
-                      height: 40,
-                    },
-                    '& .MuiPickersSectionList-root': {
-                      fontSize: 13,
-                      minHeight: 40,
-                      alignItems: 'center',
+          <Button
+            variant="outlined"
+            startIcon={<DownloadOutlinedIcon />}
+            sx={{ alignSelf: { xs: 'flex-start', lg: 'center' } }}
+          >
+            Export
+          </Button>
+          <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5}>
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <DateRangePicker
+                value={dateRange}
+                onChange={(newValue) => setDateRange(newValue)}
+                format="YYYY/MM/DD"
+                slotProps={{
+                  field: {
+                    dateSeparator: ' — ',
+                  },
+                  textField: {
+                    size: 'small',
+                    sx: {
+                      minWidth: { xs: '100%', md: 260 },
+                      '& .MuiPickersOutlinedInput-root': {
+                        bgcolor: 'common.white',
+                        borderRadius: 1,
+                        height: 40,
+                      },
+                      '& .MuiPickersSectionList-root': {
+                        fontSize: 13,
+                        minHeight: 40,
+                        alignItems: 'center',
+                      },
                     },
                   },
+                }}
+              />
+            </LocalizationProvider>
+            <TextField
+              size="small"
+              placeholder={searchPlaceholder}
+              value={searchValue}
+              onChange={(event) => setSearchValue(event.target.value)}
+              sx={{
+                minWidth: { xs: '100%', md: 240 },
+                '& .MuiOutlinedInput-root': {
+                  bgcolor: 'common.white',
                 },
               }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchOutlinedIcon fontSize="small" color="action" />
+                  </InputAdornment>
+                ),
+              }}
             />
-          </LocalizationProvider>
-          <TextField
-            size="small"
-            placeholder={searchPlaceholder}
-            value={searchValue}
-            onChange={(event) => setSearchValue(event.target.value)}
-            sx={{
-              minWidth: { xs: '100%', md: 240 },
-              '& .MuiOutlinedInput-root': {
-                bgcolor: 'common.white',
-              },
-            }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchOutlinedIcon fontSize="small" color="action" />
-                </InputAdornment>
-              ),
-            }}
-          />
+          </Stack>
         </Stack>
-      </Stack>
 
-      <DataTable
-        rows={filteredRows}
-        columns={columns}
-        onEdit={onEdit}
-        showDelete={false}
-        showOperations={showOperations}
-        emptyStateMessage={emptyStateMessage}
-        footer={
-          <Box
-            sx={{
-              px: 2,
-              py: 1.25,
-              display: 'flex',
-              justifyContent: 'flex-end',
-            }}
-          >
-            <Typography variant="caption" color="text.secondary">
-              {paginationLabel}
-            </Typography>
-          </Box>
-        }
-      />
+        <DataTable
+          rows={filteredRows}
+          columns={columns}
+          onEdit={onEdit}
+          showDelete={false}
+          showOperations={showOperations}
+          emptyStateMessage={emptyStateMessage}
+          footer={
+            <Box
+              sx={{
+                px: 2,
+                py: 1.25,
+                display: 'flex',
+                justifyContent: 'flex-end',
+              }}
+            >
+              <Typography variant="caption" color="text.secondary">
+                {paginationLabel}
+              </Typography>
+            </Box>
+          }
+        />
+      </Stack>
 
       {footerLinkText ? (
         <Link component="button" type="button" underline="hover" sx={{ alignSelf: 'flex-start' }}>

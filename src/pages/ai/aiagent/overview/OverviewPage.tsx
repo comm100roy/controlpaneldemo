@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import ScienceIcon from '@mui/icons-material/Science'
-import { Button, Grid, Stack } from '@mui/material'
-import { Link as RouterLink, useParams } from 'react-router-dom'
+import { Alert, Button, Grid, Stack } from '@mui/material'
+import { Link as RouterLink, useOutletContext, useParams } from 'react-router-dom'
 import BookedMeetingsDrawer from '../../../../components/dashboard/BookedMeetingsDrawer'
 import CollectedLeadsDrawer from '../../../../components/dashboard/CollectedLeadsDrawer'
 import EditAiAgentDrawer from '../../../../components/dashboard/EditAiAgentDrawer'
@@ -10,7 +10,7 @@ import TestChatDrawer from '../../../../components/common/TestChatDrawer'
 import AgentOverviewCard from '../../../../components/dashboard/AgentOverviewCard'
 import OverviewHighlightPanel from '../../../../components/dashboard/OverviewHighlightPanel'
 import StatsGrid from '../../../../components/dashboard/StatsGrid'
-import { getAiAgentRecord } from '../../../../data/aiAgents'
+import type { AiAgentRecord } from '../../../../data/aiAgents'
 import {
   agentProfile,
   knowledgeStats,
@@ -19,15 +19,47 @@ import {
 } from '../../../../data/dashboard'
 import { appRoutes, resolveAiAgentId } from '../../../../data/routes'
 
+type OverviewPageLayoutContext = {
+  aiAgents?: AiAgentRecord[]
+  aiAgentsLoading?: boolean
+  aiAgentsError?: string | null
+}
+
 function OverviewPage() {
   const { aiAgentId } = useParams<{ aiAgentId: string }>()
+  const layoutContext = useOutletContext<OverviewPageLayoutContext | undefined>()
   const [isTestDrawerOpen, setIsTestDrawerOpen] = useState(false)
   const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false)
   const [isCollectedLeadsDrawerOpen, setIsCollectedLeadsDrawerOpen] = useState(false)
   const [isBookedMeetingsDrawerOpen, setIsBookedMeetingsDrawerOpen] = useState(false)
   const [editDrawerSession, setEditDrawerSession] = useState(0)
   const resolvedAiAgentId = resolveAiAgentId(aiAgentId)
-  const selectedAiAgent = getAiAgentRecord(resolvedAiAgentId)
+  const aiAgents = layoutContext?.aiAgents ?? []
+  const selectedAiAgent = aiAgents.find((agent) => agent.id === resolvedAiAgentId) ?? null
+
+  if (layoutContext?.aiAgentsLoading) {
+    return (
+      <Page title="Overview">
+        <Alert severity="info">Loading AI agents...</Alert>
+      </Page>
+    )
+  }
+
+  if (layoutContext?.aiAgentsError) {
+    return (
+      <Page title="Overview">
+        <Alert severity="error">{layoutContext.aiAgentsError}</Alert>
+      </Page>
+    )
+  }
+
+  if (!selectedAiAgent) {
+    return (
+      <Page title="Overview">
+        <Alert severity="warning">No AI agents are available for this site.</Alert>
+      </Page>
+    )
+  }
 
   const resolvedAgentProfile = {
     ...agentProfile,

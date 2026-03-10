@@ -103,55 +103,6 @@ const chartSeriesMeta: Record<
   },
 }
 
-const usageItems: UsageItem[] = [
-  {
-    title: 'AI Replies',
-    used: 6138,
-    total: 5000,
-    color: '#f44336',
-    icon: <MessageOutlinedIcon sx={{ fontSize: 18 }} />,
-  },
-  {
-    title: 'AI Agents',
-    used: 80,
-    total: 101,
-    color: '#f4a340',
-    icon: <SmartToyOutlinedIcon sx={{ fontSize: 18 }} />,
-    manageTo: appRoutes.ai.aiAgentOverview(),
-  },
-  {
-    title: 'AI Copilots',
-    used: 32,
-    total: 100,
-    color: '#1f8ed8',
-    icon: <AutoAwesomeOutlinedIcon sx={{ fontSize: 18 }} />,
-    manageTo: appRoutes.ai.aiCopilot,
-  },
-  {
-    title: 'Task Bots',
-    used: 100,
-    total: 101,
-    color: '#f44336',
-    icon: <TaskAltOutlinedIcon sx={{ fontSize: 18 }} />,
-    manageTo: appRoutes.ai.taskBot,
-  },
-  {
-    title: 'Voice Bot Minutes',
-    used: 0,
-    total: 6300,
-    color: '#c7cbd3',
-    icon: <AccessTimeOutlinedIcon sx={{ fontSize: 18 }} />,
-  },
-  {
-    title: 'Voice Bots',
-    used: 9,
-    total: 21,
-    color: '#1f8ed8',
-    icon: <KeyboardVoiceOutlinedIcon sx={{ fontSize: 18 }} />,
-    manageTo: appRoutes.ai.voiceBot,
-  },
-]
-
 const aiAgentLiveChatMetrics: ChatMetric[] = [
   { label: 'AI Agent Only Chats', value: '13' },
   { label: 'Avg. Rating of AI Agent Only Chats', value: '0' },
@@ -349,18 +300,18 @@ function LegendPill({
       onClick={onToggle}
       aria-pressed={active}
       sx={{
-        px: 1.2,
-        py: 0.45,
+        px: 0.9,
+        py: 0.3,
         borderRadius: 999,
         border: '1px solid rgba(69, 90, 100, 0.55)',
         bgcolor: active ? 'common.white' : 'rgba(236, 239, 241, 0.55)',
-        minHeight: 28,
+        minHeight: 24,
         justifyContent: 'flex-start',
         transition: 'background-color 160ms ease, border-color 160ms ease, opacity 160ms ease',
         opacity: active ? 1 : 0.6,
       }}
     >
-      <Stack direction="row" spacing={0.8} alignItems="center">
+      <Stack direction="row" spacing={0.65} alignItems="center">
         <Box
           sx={{
             width: 8,
@@ -620,6 +571,55 @@ function ChatTrendTable({ data }: { data: ChatTrendPoint[] }) {
 }
 
 function DashboardPage() {
+  const usageItems: UsageItem[] = [
+    {
+      title: 'AI Replies',
+      used: 6138,
+      total: 5000,
+      color: '#f44336',
+      icon: <MessageOutlinedIcon sx={{ fontSize: 18 }} />,
+    },
+    {
+      title: 'AI Agents',
+      used: 80,
+      total: 101,
+      color: '#f4a340',
+      icon: <SmartToyOutlinedIcon sx={{ fontSize: 18 }} />,
+      manageTo: appRoutes.ai.aiAgentOverview(),
+    },
+    {
+      title: 'AI Copilots',
+      used: 32,
+      total: 100,
+      color: '#1f8ed8',
+      icon: <AutoAwesomeOutlinedIcon sx={{ fontSize: 18 }} />,
+      manageTo: appRoutes.ai.aiCopilot,
+    },
+    {
+      title: 'Task Bots',
+      used: 100,
+      total: 101,
+      color: '#f44336',
+      icon: <TaskAltOutlinedIcon sx={{ fontSize: 18 }} />,
+      manageTo: appRoutes.ai.taskBot,
+    },
+    {
+      title: 'Voice Bot Minutes',
+      used: 0,
+      total: 6300,
+      color: '#c7cbd3',
+      icon: <AccessTimeOutlinedIcon sx={{ fontSize: 18 }} />,
+    },
+    {
+      title: 'Voice Bots',
+      used: 9,
+      total: 21,
+      color: '#1f8ed8',
+      icon: <KeyboardVoiceOutlinedIcon sx={{ fontSize: 18 }} />,
+      manageTo: appRoutes.ai.voiceBot,
+    },
+  ]
+
   const [statsView, setStatsView] = useState<'ai-agent' | 'voice-bot'>('ai-agent')
   const [usageChannel, setUsageChannel] = useState<'live-chat' | 'ticketing'>('live-chat')
   const [visibleSeries, setVisibleSeries] = useState<Record<LegendSeriesKey, boolean>>({

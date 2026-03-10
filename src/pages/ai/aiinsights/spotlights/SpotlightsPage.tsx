@@ -175,37 +175,39 @@ function SpotlightsPage() {
             Spotlights feature consumes 1 AI Reply for each chat.
           </AiInsightsInfoBanner>
 
-          <Box>
-            <Button
-              component={RouterLink}
-              to={appRoutes.ai.aiInsightsSpotlightNew}
-              variant="contained"
-              sx={{ minWidth: 132 }}
-            >
-              New Spotlight
-            </Button>
-          </Box>
-
-          <DataTable
-            rows={rows}
-            columns={spotlightColumns}
-            onEdit={(row) => navigate(appRoutes.ai.aiInsightsSpotlightEdit(row.id))}
-            onDelete={handleRequestDelete}
-            footer={
-              <Box
-                sx={{
-                  px: 2.5,
-                  py: 1.25,
-                  display: 'flex',
-                  justifyContent: 'flex-end',
-                }}
+          <Stack spacing={1.5}>
+            <Box>
+              <Button
+                component={RouterLink}
+                to={appRoutes.ai.aiInsightsSpotlightNew}
+                variant="contained"
+                sx={{ minWidth: 132 }}
               >
-                <Typography variant="caption" color="text.secondary">
-                  Rows per page: 50&nbsp;&nbsp;&nbsp; 1-{rows.length} of {rows.length}
-                </Typography>
-              </Box>
-            }
-          />
+                New Spotlight
+              </Button>
+            </Box>
+
+            <DataTable
+              rows={rows}
+              columns={spotlightColumns}
+              onEdit={(row) => navigate(appRoutes.ai.aiInsightsSpotlightEdit(row.id))}
+              onDelete={handleRequestDelete}
+              footer={
+                <Box
+                  sx={{
+                    px: 2.5,
+                    py: 1.25,
+                    display: 'flex',
+                    justifyContent: 'flex-end',
+                  }}
+                >
+                  <Typography variant="caption" color="text.secondary">
+                    Rows per page: 50&nbsp;&nbsp;&nbsp; 1-{rows.length} of {rows.length}
+                  </Typography>
+                </Box>
+              }
+            />
+          </Stack>
         </Stack>
       </Page>
 

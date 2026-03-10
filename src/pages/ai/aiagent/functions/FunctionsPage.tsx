@@ -39,17 +39,17 @@ function FunctionsPage() {
           </Typography>
         </Box>
 
-        <Box sx={{ mt: -1 }}>
-          <Button
-            component={RouterLink}
-            to={appRoutes.ai.aiAgentFunctionNew(resolvedAiAgentId)}
-            variant="contained"
-          >
-            New Function
-          </Button>
-        </Box>
+        <Stack spacing={1.5} sx={{ mt: -1 }}>
+          <Box>
+            <Button
+              component={RouterLink}
+              to={appRoutes.ai.aiAgentFunctionNew(resolvedAiAgentId)}
+              variant="contained"
+            >
+              New Function
+            </Button>
+          </Box>
 
-        <Box sx={{ mt: -1.5 }}>
           <DataTable
             rows={functionRows}
             nameHeader="Name"
@@ -72,7 +72,7 @@ function FunctionsPage() {
               </Box>
             }
           />
-        </Box>
+        </Stack>
       </Page>
       <TestChatDrawer
         open={isTestDrawerOpen}

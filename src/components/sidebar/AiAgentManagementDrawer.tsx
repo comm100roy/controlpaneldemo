@@ -36,6 +36,8 @@ type AiAgentManagementDrawerProps = {
   open: boolean
   onClose: () => void
   agents: AiAgentRecord[]
+  loading: boolean
+  error: string | null
   onCreateAgent: (agent: AiAgentRecord) => void
   onUpdateAgent: (agent: AiAgentRecord) => void
   onDeleteAgent: (agentId: string) => void
@@ -68,6 +70,8 @@ function AiAgentManagementDrawer({
   open,
   onClose,
   agents,
+  loading,
+  error,
   onCreateAgent,
   onUpdateAgent,
   onDeleteAgent,
@@ -350,25 +354,39 @@ function AiAgentManagementDrawer({
               </Typography>
             </Stack>
 
-            <DataTable
-              rows={rows}
-              columns={columns}
-              showOperations={false}
-              footer={
-                <Box
-                  sx={{
-                    px: 2,
-                    py: 1.25,
-                    display: 'flex',
-                    justifyContent: 'flex-end',
-                  }}
-                >
-                  <Typography variant="caption" color="text.secondary">
-                    Rows per page: 50&nbsp;&nbsp;&nbsp; 1-{rows.length} of {rows.length}
-                  </Typography>
-                </Box>
-              }
-            />
+            {loading ? (
+              <Typography variant="body2" color="text.secondary">
+                Loading AI agents...
+              </Typography>
+            ) : error ? (
+              <Typography variant="body2" color="error.main">
+                {error}
+              </Typography>
+            ) : rows.length === 0 ? (
+              <Typography variant="body2" color="text.secondary">
+                No AI agents are available for this site.
+              </Typography>
+            ) : (
+              <DataTable
+                rows={rows}
+                columns={columns}
+                showOperations={false}
+                footer={
+                  <Box
+                    sx={{
+                      px: 2,
+                      py: 1.25,
+                      display: 'flex',
+                      justifyContent: 'flex-end',
+                    }}
+                  >
+                    <Typography variant="caption" color="text.secondary">
+                      Rows per page: 50&nbsp;&nbsp;&nbsp; 1-{rows.length} of {rows.length}
+                    </Typography>
+                  </Box>
+                }
+              />
+            )}
           </Stack>
         ) : (
           <AiAgentForm

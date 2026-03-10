@@ -4,9 +4,14 @@ import { defaultAiAgentId } from './data/aiAgents'
 import { productSnapshots } from './data/dashboard'
 import {
   appRoutes,
+  defaultSiteId,
+  getSiteIdFromPathname,
   legacyRoutes,
   level1Segments,
+  placeholderLevel1Segments,
   productDashboardPath,
+  productRootPath,
+  stripSitePrefix,
 } from './data/routes'
 import DashboardPage from './pages/ai/DashboardPage'
 import ChatResolutionStatusPage from './pages/ai/aiinsights/ChatResolutionStatusPage'
@@ -28,60 +33,60 @@ import ThumbsDownAnswersPage from './pages/ai/aiagent/learning/ThumbsDownAnswers
 import TopicsPage from './pages/ai/aiagent/topics/TopicsPage'
 import UnansweredQuestionsPage from './pages/ai/aiagent/learning/UnansweredQuestionsPage'
 
-const placeholderRoutes = [
+const createPlaceholderRoutes = (siteId?: string) => [
   {
-    root: `/${level1Segments.livechat}`,
-    dashboard: productDashboardPath(level1Segments.livechat),
+    root: productRootPath(level1Segments.livechat, siteId),
+    dashboard: productDashboardPath(level1Segments.livechat, siteId),
     snapshot: productSnapshots.livechat,
   },
   {
-    root: `/${level1Segments.ticketing}`,
-    dashboard: productDashboardPath(level1Segments.ticketing),
+    root: productRootPath(level1Segments.ticketing, siteId),
+    dashboard: productDashboardPath(level1Segments.ticketing, siteId),
     snapshot: productSnapshots.ticketing,
   },
   {
-    root: `/${level1Segments.voice}`,
-    dashboard: productDashboardPath(level1Segments.voice),
+    root: productRootPath(level1Segments.voice, siteId),
+    dashboard: productDashboardPath(level1Segments.voice, siteId),
     snapshot: productSnapshots.voice,
   },
   {
-    root: `/${level1Segments.outreach}`,
-    dashboard: productDashboardPath(level1Segments.outreach),
+    root: productRootPath(level1Segments.outreach, siteId),
+    dashboard: productDashboardPath(level1Segments.outreach, siteId),
     snapshot: productSnapshots.outreach,
   },
   {
-    root: `/${level1Segments.queue}`,
-    dashboard: productDashboardPath(level1Segments.queue),
+    root: productRootPath(level1Segments.queue, siteId),
+    dashboard: productDashboardPath(level1Segments.queue, siteId),
     snapshot: productSnapshots.queue,
   },
   {
-    root: `/${level1Segments.booking}`,
-    dashboard: productDashboardPath(level1Segments.booking),
+    root: productRootPath(level1Segments.booking, siteId),
+    dashboard: productDashboardPath(level1Segments.booking, siteId),
     snapshot: productSnapshots.booking,
   },
   {
-    root: `/${level1Segments.knowledgebase}`,
-    dashboard: productDashboardPath(level1Segments.knowledgebase),
+    root: productRootPath(level1Segments.knowledgebase, siteId),
+    dashboard: productDashboardPath(level1Segments.knowledgebase, siteId),
     snapshot: productSnapshots.knowledgebase,
   },
   {
-    root: `/${level1Segments.contact}`,
-    dashboard: productDashboardPath(level1Segments.contact),
+    root: productRootPath(level1Segments.contact, siteId),
+    dashboard: productDashboardPath(level1Segments.contact, siteId),
     snapshot: productSnapshots.contact,
   },
   {
-    root: `/${level1Segments.report}`,
-    dashboard: productDashboardPath(level1Segments.report),
+    root: productRootPath(level1Segments.report, siteId),
+    dashboard: productDashboardPath(level1Segments.report, siteId),
     snapshot: productSnapshots.report,
   },
   {
-    root: `/${level1Segments.globalsettings}`,
-    dashboard: productDashboardPath(level1Segments.globalsettings),
+    root: productRootPath(level1Segments.globalsettings, siteId),
+    dashboard: productDashboardPath(level1Segments.globalsettings, siteId),
     snapshot: productSnapshots.globalsettings,
   },
   {
-    root: `/${level1Segments.integrations}`,
-    dashboard: productDashboardPath(level1Segments.integrations),
+    root: productRootPath(level1Segments.integrations, siteId),
+    dashboard: productDashboardPath(level1Segments.integrations, siteId),
     snapshot: productSnapshots.integrations,
   },
 ]
@@ -99,6 +104,17 @@ function LegacyAiAgentRedirect() {
   )
 }
 
+function SitePrefixedRedirect() {
+  const location = useLocation()
+
+  return (
+    <Navigate
+      to={`/ui/${defaultSiteId}${location.pathname}${location.search}${location.hash}`}
+      replace
+    />
+  )
+}
+
 function AiAgentSectionRedirect({ to }: { to: (aiAgentId: string) => string }) {
   const { aiAgentId } = useParams<{ aiAgentId: string }>()
 
@@ -107,7 +123,7 @@ function AiAgentSectionRedirect({ to }: { to: (aiAgentId: string) => string }) {
 
 function DefaultAiAgentPathRedirect() {
   const location = useLocation()
-  const match = location.pathname.match(
+  const match = stripSitePrefix(location.pathname).match(
     /^\/ai\/aiagent\/(overview|knowledge|topics|events|functions|learning)$/,
   )
   const nextPath = match
@@ -129,17 +145,18 @@ function AiAgentInstructionsRedirect() {
 
 function DefaultAiAgentEditRedirect() {
   const location = useLocation()
-  const topicMatch = location.pathname.match(/^\/ai\/aiagent\/topics\/([^/]+)\/edit$/)
+  const appPath = stripSitePrefix(location.pathname)
+  const topicMatch = appPath.match(/^\/ai\/aiagent\/topics\/([^/]+)\/edit$/)
   if (topicMatch) {
     return <Navigate to={appRoutes.ai.aiAgentTopicEdit(topicMatch[1], defaultAiAgentId)} replace />
   }
 
-  const eventMatch = location.pathname.match(/^\/ai\/aiagent\/events\/([^/]+)\/edit$/)
+  const eventMatch = appPath.match(/^\/ai\/aiagent\/events\/([^/]+)\/edit$/)
   if (eventMatch) {
     return <Navigate to={appRoutes.ai.aiAgentEventEdit(eventMatch[1], defaultAiAgentId)} replace />
   }
 
-  const functionMatch = location.pathname.match(/^\/ai\/aiagent\/functions\/([^/]+)\/edit$/)
+  const functionMatch = appPath.match(/^\/ai\/aiagent\/functions\/([^/]+)\/edit$/)
   if (functionMatch) {
     return (
       <Navigate
@@ -153,6 +170,10 @@ function DefaultAiAgentEditRedirect() {
 }
 
 function App() {
+  const location = useLocation()
+  const siteId = getSiteIdFromPathname(location.pathname)
+  const placeholderRoutes = createPlaceholderRoutes(siteId)
+
   return (
     <Routes>
       <Route element={<AppShell />}>
@@ -350,6 +371,14 @@ function App() {
           path={legacyRoutes.voiceBot}
           element={<Navigate to={appRoutes.ai.voiceBot} replace />}
         />
+        <Route path="/ai/*" element={<SitePrefixedRedirect />} />
+        {placeholderLevel1Segments.map((segment) => (
+          <Route
+            key={`${segment}-site-prefix`}
+            path={`/${segment}/*`}
+            element={<SitePrefixedRedirect />}
+          />
+        ))}
         <Route path="*" element={<Navigate to={appRoutes.home} replace />} />
       </Route>
     </Routes>

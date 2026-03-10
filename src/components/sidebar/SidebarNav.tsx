@@ -29,19 +29,30 @@ import {
 } from '@mui/material'
 import AiAgentManagementDrawer from './AiAgentManagementDrawer'
 import {
-  aiAgentRecords,
   defaultAiAgentId,
   type AiAgentRecord,
 } from '../../data/aiAgents'
 import {
   avatarMenuActions,
-  level1Navigation,
+  getLevel1Navigation,
   sidebarLogo,
 } from '../../data/navigation'
-import { appRoutes, level1Segments, resolveAiAgentId } from '../../data/routes'
+import {
+  getAppRoutes,
+  getSiteIdFromPathname,
+  level1Segments,
+  resolveAiAgentId,
+  stripSitePrefix,
+} from '../../data/routes'
 
 type SidebarNavProps = {
   onNavigate?: () => void
+  aiAgents: AiAgentRecord[]
+  aiAgentsLoading: boolean
+  aiAgentsError: string | null
+  onCreateAiAgent: (agent: AiAgentRecord) => void
+  onUpdateAiAgent: (agent: AiAgentRecord) => void
+  onDeleteAiAgent: (agentId: string) => void
 }
 
 const channelAccentColors = [
@@ -53,25 +64,35 @@ const channelAccentColors = [
   '#5f6aff',
 ]
 
-function SidebarNav({ onNavigate }: SidebarNavProps) {
+function SidebarNav({
+  onNavigate,
+  aiAgents,
+  aiAgentsLoading,
+  aiAgentsError,
+  onCreateAiAgent,
+  onUpdateAiAgent,
+  onDeleteAiAgent,
+}: SidebarNavProps) {
   const navigate = useNavigate()
   const location = useLocation()
+  const siteId = useMemo(() => getSiteIdFromPathname(location.pathname), [location.pathname])
+  const appRoutes = useMemo(() => getAppRoutes(siteId), [siteId])
+  const level1Navigation = useMemo(() => getLevel1Navigation(siteId), [siteId])
   const [avatarAnchor, setAvatarAnchor] = useState<null | HTMLElement>(null)
   const [aiAgentAnchor, setAiAgentAnchor] = useState<null | HTMLElement>(null)
-  const [aiAgents, setAiAgents] = useState<AiAgentRecord[]>(aiAgentRecords)
   const [isAiAgentManagementDrawerOpen, setIsAiAgentManagementDrawerOpen] = useState(false)
   const [aiAgentManagementDrawerSession, setAiAgentManagementDrawerSession] = useState(0)
   const pathSegments = useMemo(
-    () => location.pathname.split('/').filter(Boolean),
+    () => stripSitePrefix(location.pathname).split('/').filter(Boolean),
     [location.pathname],
   )
   const primaryRailItems = useMemo(
     () => level1Navigation.filter((item) => item.railSection !== 'secondary'),
-    [],
+    [level1Navigation],
   )
   const secondaryRailItems = useMemo(
     () => level1Navigation.filter((item) => item.railSection === 'secondary'),
-    [],
+    [level1Navigation],
   )
   const activeLevel1 =
     level1Navigation.find((item) => item.segment === pathSegments[0]) ??
@@ -92,9 +113,13 @@ function SidebarNav({ onNavigate }: SidebarNavProps) {
     activeLevel1.segment === level1Segments.ai && activeLevel2.segment === 'aiagent'
       ? resolveAiAgentId(pathSegments[2])
       : defaultAiAgentId
-  const currentAiAgent =
-    aiAgents.find((agent) => agent.id === aiAgentIdFromPath) ?? aiAgents[0]
+  const currentAiAgent = aiAgents.find((agent) => agent.id === aiAgentIdFromPath) ?? aiAgents[0] ?? null
   const currentAiAgentRouteId = currentAiAgent?.id ?? defaultAiAgentId
+  const currentAiAgentLabel = aiAgentsLoading
+    ? 'Loading AI Agents'
+    : aiAgentsError
+      ? 'AI Agents Unavailable'
+      : currentAiAgent?.name ?? 'No AI Agents'
 
   const resolveAiAgentChildPath = (segment: string) => {
     switch (segment) {
@@ -148,14 +173,12 @@ function SidebarNav({ onNavigate }: SidebarNavProps) {
   }
 
   const handleCreateAiAgent = (agent: AiAgentRecord) => {
-    setAiAgents((current) => [agent, ...current])
+    onCreateAiAgent(agent)
     navigate(appRoutes.ai.aiAgentOverview(agent.id))
   }
 
   const handleUpdateAiAgent = (agent: AiAgentRecord) => {
-    setAiAgents((current) =>
-      current.map((currentAgent) => (currentAgent.id === agent.id ? agent : currentAgent)),
-    )
+    onUpdateAiAgent(agent)
   }
 
   const handleDeleteAiAgent = (agentId: string) => {
@@ -164,7 +187,7 @@ function SidebarNav({ onNavigate }: SidebarNavProps) {
     }
 
     const remaining = aiAgents.filter((agent) => agent.id !== agentId)
-    setAiAgents(remaining)
+    onDeleteAiAgent(agentId)
 
     if (currentAiAgentRouteId === agentId && remaining[0]) {
       navigate(appRoutes.ai.aiAgentOverview(remaining[0].id))
@@ -448,7 +471,7 @@ function SidebarNav({ onNavigate }: SidebarNavProps) {
                                     color="common.white"
                                     noWrap
                                   >
-                                    {currentAiAgent.name}
+                                    {currentAiAgentLabel}
                                   </Typography>
                                 </Box>
                               </Stack>
@@ -643,83 +666,103 @@ function SidebarNav({ onNavigate }: SidebarNavProps) {
                 backgroundColor: 'background.paper',
               }}
             >
-              {aiAgents.map((agent, index) => {
-                const selectedAgent = agent.id === currentAiAgent.id
+              {aiAgentsLoading ? (
+                <Box sx={{ px: 2, py: 2.5 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Loading AI agents...
+                  </Typography>
+                </Box>
+              ) : aiAgentsError ? (
+                <Box sx={{ px: 2, py: 2.5 }}>
+                  <Typography variant="body2" color="error.main">
+                    {aiAgentsError}
+                  </Typography>
+                </Box>
+              ) : aiAgents.length === 0 ? (
+                <Box sx={{ px: 2, py: 2.5 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    No AI agents are available for this site.
+                  </Typography>
+                </Box>
+              ) : (
+                aiAgents.map((agent, index) => {
+                  const selectedAgent = agent.id === currentAiAgent?.id
 
-                return (
-                  <Box key={agent.id}>
-                    <ButtonBase
-                      onClick={() => {
-                        handleCloseAiAgentPopover()
-                        navigate(appRoutes.ai.aiAgentOverview(agent.id))
-                        onNavigate?.()
-                      }}
-                      sx={{
-                        width: '100%',
-                        px: 2,
-                        py: 1.5,
-                        justifyContent: 'space-between',
-                        textAlign: 'left',
-                        backgroundColor: selectedAgent
-                          ? alpha('#1976d2', 0.06)
-                          : 'transparent',
-                        '&:hover': {
-                          backgroundColor: alpha('#1976d2', 0.05),
-                        },
-                      }}
-                    >
-                      <Stack direction="row" spacing={1.25} alignItems="center" sx={{ minWidth: 0 }}>
-                        <Avatar
-                          variant="rounded"
-                          sx={{
-                            width: 22,
-                            height: 22,
-                            fontSize: 11,
-                            bgcolor: selectedAgent ? '#0d7bdc' : '#607d8b',
-                          }}
-                        >
-                          {agent.name.slice(0, 1)}
-                        </Avatar>
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            fontWeight: selectedAgent ? 700 : 500,
-                            color: selectedAgent ? 'primary.main' : 'text.primary',
-                          }}
-                        >
-                          {agent.name}
-                        </Typography>
-                      </Stack>
+                  return (
+                    <Box key={agent.id}>
+                      <ButtonBase
+                        onClick={() => {
+                          handleCloseAiAgentPopover()
+                          navigate(appRoutes.ai.aiAgentOverview(agent.id))
+                          onNavigate?.()
+                        }}
+                        sx={{
+                          width: '100%',
+                          px: 2,
+                          py: 1.5,
+                          justifyContent: 'space-between',
+                          textAlign: 'left',
+                          backgroundColor: selectedAgent
+                            ? alpha('#1976d2', 0.06)
+                            : 'transparent',
+                          '&:hover': {
+                            backgroundColor: alpha('#1976d2', 0.05),
+                          },
+                        }}
+                      >
+                        <Stack direction="row" spacing={1.25} alignItems="center" sx={{ minWidth: 0 }}>
+                          <Avatar
+                            variant="rounded"
+                            sx={{
+                              width: 22,
+                              height: 22,
+                              fontSize: 11,
+                              bgcolor: selectedAgent ? '#0d7bdc' : '#607d8b',
+                            }}
+                          >
+                            {agent.name.slice(0, 1)}
+                          </Avatar>
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              fontWeight: selectedAgent ? 700 : 500,
+                              color: selectedAgent ? 'primary.main' : 'text.primary',
+                            }}
+                          >
+                            {agent.name}
+                          </Typography>
+                        </Stack>
 
-                      <Stack direction="row" spacing={0.4} alignItems="center">
-                        {agent.channelKinds.map((kind, channelIndex) =>
-                          kind === 'chat' ? (
-                            <ChatBubbleOutlineOutlinedIcon
-                              key={`${agent.id}-chat-${channelIndex}`}
-                              sx={{
-                                fontSize: 16,
-                                color: selectedAgent ? '#9ccc65' : '#1d9bf0',
-                              }}
-                            />
-                          ) : (
-                            <CircleRoundedIcon
-                              key={`${agent.id}-dot-${channelIndex}`}
-                              sx={{
-                                fontSize: 12,
-                                color:
-                                  channelAccentColors[
-                                    channelIndex % channelAccentColors.length
-                                  ],
-                              }}
-                            />
-                          ),
-                        )}
-                      </Stack>
-                    </ButtonBase>
-                    {index < aiAgents.length - 1 ? <Divider /> : null}
-                  </Box>
-                )
-              })}
+                        <Stack direction="row" spacing={0.4} alignItems="center">
+                          {agent.channelKinds.map((kind, channelIndex) =>
+                            kind === 'chat' ? (
+                              <ChatBubbleOutlineOutlinedIcon
+                                key={`${agent.id}-chat-${channelIndex}`}
+                                sx={{
+                                  fontSize: 16,
+                                  color: selectedAgent ? '#9ccc65' : '#1d9bf0',
+                                }}
+                              />
+                            ) : (
+                              <CircleRoundedIcon
+                                key={`${agent.id}-dot-${channelIndex}`}
+                                sx={{
+                                  fontSize: 12,
+                                  color:
+                                    channelAccentColors[
+                                      channelIndex % channelAccentColors.length
+                                    ],
+                                }}
+                              />
+                            ),
+                          )}
+                        </Stack>
+                      </ButtonBase>
+                      {index < aiAgents.length - 1 ? <Divider /> : null}
+                    </Box>
+                  )
+                })
+              )}
             </Box>
           </Box>
 
@@ -763,6 +806,8 @@ function SidebarNav({ onNavigate }: SidebarNavProps) {
         open={isAiAgentManagementDrawerOpen}
         onClose={handleCloseAiAgentManagementDrawer}
         agents={aiAgents}
+        loading={aiAgentsLoading}
+        error={aiAgentsError}
         onCreateAgent={handleCreateAiAgent}
         onUpdateAgent={handleUpdateAiAgent}
         onDeleteAgent={handleDeleteAiAgent}

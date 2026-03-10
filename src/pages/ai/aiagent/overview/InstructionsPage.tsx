@@ -166,30 +166,25 @@ function InstructionsPage() {
           </Stack>
         }
       >
-        <Stack
-          direction="row"
-          justifyContent="space-between"
-          alignItems="center"
-          sx={{ mt: -1 }}
-        >
-          <Button
-            variant="contained"
-            onClick={handleOpenMenu}
-            disabled={isAtInstructionLimit}
-          >
-            New Instruction
-          </Button>
-          <Typography variant="caption" color="text.secondary">
-            {rows.length} of {maxInstructions} used
-          </Typography>
-        </Stack>
-        <Box sx={{ mt: -1.5 }}>
+        <Stack spacing={1.5} sx={{ mt: -1 }}>
+          <Stack direction="row" justifyContent="space-between" alignItems="center">
+            <Button
+              variant="contained"
+              onClick={handleOpenMenu}
+              disabled={isAtInstructionLimit}
+            >
+              New Instruction
+            </Button>
+            <Typography variant="caption" color="text.secondary">
+              {rows.length} of {maxInstructions} used
+            </Typography>
+          </Stack>
           <DataTable
             rows={rows}
             onEdit={handleEditInstruction}
             onDelete={handleRequestDeleteInstruction}
           />
-        </Box>
+        </Stack>
       </Page>
 
       <Menu
