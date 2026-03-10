@@ -28,8 +28,8 @@ import CornerToggleButtonGroup from '../common/CornerToggleButtonGroup'
 import SideDrawer from '../common/SideDrawer'
 import {
   functionDefinitions,
-  type TopicAnswerMode,
 } from '../../data/dashboard'
+import { type TopicAnswerMode } from '../../data/topics'
 import TopicWorkflowPlaceholder from './TopicWorkflowPlaceholder'
 
 type AnswerEditorCardProps = {
