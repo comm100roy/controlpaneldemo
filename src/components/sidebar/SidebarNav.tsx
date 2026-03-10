@@ -121,6 +121,20 @@ function SidebarNav({
       ? 'AI Agents Unavailable'
       : currentAiAgent?.name ?? 'No AI Agents'
 
+  const getAiAgentRouteWithPreservedPage = (nextAiAgentId: string) => {
+    const currentAppPath = stripSitePrefix(location.pathname)
+    const isAiAgentRoute = pathSegments[0] === 'ai' && pathSegments[1] === 'aiagent'
+
+    if (!isAiAgentRoute || pathSegments.length < 3) {
+      return `${appRoutes.ai.aiAgentOverview(nextAiAgentId)}${location.search}${location.hash}`
+    }
+
+    const nextPathSegments = [...pathSegments]
+    nextPathSegments[2] = nextAiAgentId
+
+    return `${location.pathname.replace(currentAppPath, `/${nextPathSegments.join('/')}`)}${location.search}${location.hash}`
+  }
+
   const resolveAiAgentChildPath = (segment: string) => {
     switch (segment) {
       case 'overview':
@@ -694,7 +708,7 @@ function SidebarNav({
                       <ButtonBase
                         onClick={() => {
                           handleCloseAiAgentPopover()
-                          navigate(appRoutes.ai.aiAgentOverview(agent.id))
+                          navigate(getAiAgentRouteWithPreservedPage(agent.id))
                           onNavigate?.()
                         }}
                         sx={{
