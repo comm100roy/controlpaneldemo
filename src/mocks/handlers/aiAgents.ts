@@ -1,5 +1,6 @@
 import { http, HttpResponse } from 'msw'
 import { aiAgentRecords, type AiAgentRecord } from '../../data/aiAgents'
+import { createEmptyTopicStateForAgent, deleteScopedTopicState } from './topicStore'
 
 const createGuid = () => crypto.randomUUID()
 
@@ -70,6 +71,7 @@ export const aiAgentHandlers = [
     const siteAiAgents = getSiteAiAgents(requiredSiteId.siteId)
 
     siteAiAgents.unshift(createdAgent)
+    createEmptyTopicStateForAgent(requiredSiteId.siteId, createdAgent.id)
     return HttpResponse.json(createdAgent, { status: 201 })
   }),
 
@@ -147,6 +149,7 @@ export const aiAgentHandlers = [
     }
 
     siteAiAgents.splice(agentIndex, 1)
+    deleteScopedTopicState(requiredSiteId.siteId, aiAgentId)
     return new HttpResponse(null, { status: 204 })
   }),
 ]

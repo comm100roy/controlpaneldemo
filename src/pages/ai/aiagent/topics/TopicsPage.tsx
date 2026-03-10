@@ -11,11 +11,17 @@ import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import {
+  Alert,
   Box,
   Button,
   Card,
   CardContent,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   MenuItem,
+  Snackbar,
   IconButton,
   Stack,
   TextField,
@@ -23,7 +29,16 @@ import {
   useMediaQuery,
   useTheme,
 } from '@mui/material'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import {
+  createTopic,
+  createTopicCategory,
+  deleteTopic,
+  deleteTopicCategory,
+  getTopicCategories,
+  getTopics,
+  updateTopicCategory,
+} from '../../../../api/topics'
 import Page from '../../../../components/common/Page'
 import SideDrawer from '../../../../components/common/SideDrawer'
 import CategoryForm, {
@@ -35,12 +50,25 @@ import DataTable, {
 } from '../../../../components/common/DataTable'
 import TestChatDrawer from '../../../../components/common/TestChatDrawer'
 import {
-  topicCategories,
-  topicRows as initialTopicRows,
+  rootTopicCategoryId,
   type TopicCategory,
-  type TopicRow,
-} from '../../../../data/dashboard'
-import { appRoutes, resolveAiAgentId } from '../../../../data/routes'
+  type TopicDefinition,
+} from '../../../../data/topics'
+import {
+  buildTopicCategoryOptions,
+  collectTopicCategoryIds,
+  findTopicCategoryById,
+  insertTopicCategory,
+  moveTopicCategoryTree,
+  removeTopicCategoryTree,
+  updateTopicCategoryTree,
+} from '../../../../data/topicUtils'
+import {
+  appRoutes,
+  getSiteIdFromPathname,
+  resolveAiAgentId,
+  resolveSiteId,
+} from '../../../../data/routes'
 
 type TopicTreeItemProps = {
   node: TopicCategory
@@ -52,6 +80,7 @@ type TopicTreeItemProps = {
   onToggle: (categoryId: string) => void
   onCreateCategory: (parentId: string) => void
   onEditCategory: (categoryId: string) => void
+  onDeleteCategory: (categoryId: string) => void
 }
 
 type TopicDraft = {
@@ -60,152 +89,20 @@ type TopicDraft = {
   description: string
 }
 
-const createTopicDraft = (): TopicDraft => ({
+type TopicTableRow = InstructionRow & {
+  categoryId: string
+}
+
+const allCategoriesNode: TopicCategory = {
+  id: 'all',
+  label: 'All Categories',
+}
+
+const createTopicDraft = (categoryId: string = rootTopicCategoryId): TopicDraft => ({
   name: '',
-  categoryId: 'root',
+  categoryId,
   description: '',
 })
-
-const cloneTopicCategories = (categories: TopicCategory[]): TopicCategory[] =>
-  categories.map((category) => ({
-    ...category,
-    children: category.children ? cloneTopicCategories(category.children) : undefined,
-  }))
-
-const findCategoryById = (
-  categories: TopicCategory[],
-  categoryId: string,
-  parentId?: string,
-): { node: TopicCategory; parentId?: string } | null => {
-  for (const category of categories) {
-    if (category.id === categoryId) {
-      return { node: category, parentId }
-    }
-
-    if (category.children?.length) {
-      const match = findCategoryById(category.children, categoryId, category.id)
-      if (match) {
-        return match
-      }
-    }
-  }
-
-  return null
-}
-
-const collectCategoryIds = (category: TopicCategory): string[] => [
-  category.id,
-  ...(category.children?.flatMap(collectCategoryIds) ?? []),
-]
-
-const buildCategoryOptions = (
-  categories: TopicCategory[],
-  excludedIds: string[] = [],
-  parentPath = '',
-): CategoryFormOption[] =>
-  categories.flatMap((category) => {
-    if (category.id === 'all' || excludedIds.includes(category.id)) {
-      return []
-    }
-
-    const currentPath =
-      category.label === '/'
-        ? '/'
-        : parentPath === '/' || parentPath.length === 0
-          ? `${parentPath}${category.label}`.replace(/^$/, category.label)
-          : `${parentPath}/${category.label}`
-
-    return [
-      { id: category.id, label: currentPath },
-      ...(category.children
-        ? buildCategoryOptions(category.children, excludedIds, currentPath)
-        : []),
-    ]
-  })
-
-const insertChildCategory = (
-  categories: TopicCategory[],
-  parentId: string,
-  child: TopicCategory,
-): TopicCategory[] =>
-  categories.map((category) =>
-    category.id === parentId
-      ? {
-          ...category,
-          children: [...(category.children ?? []), child],
-        }
-      : {
-          ...category,
-          children: category.children
-            ? insertChildCategory(category.children, parentId, child)
-            : undefined,
-        },
-  )
-
-const updateCategoryNode = (
-  categories: TopicCategory[],
-  categoryId: string,
-  updater: (category: TopicCategory) => TopicCategory,
-): TopicCategory[] =>
-  categories.map((category) =>
-    category.id === categoryId
-      ? updater(category)
-      : {
-          ...category,
-          children: category.children
-            ? updateCategoryNode(category.children, categoryId, updater)
-            : undefined,
-        },
-  )
-
-const removeCategoryNode = (
-  categories: TopicCategory[],
-  categoryId: string,
-): { removed?: TopicCategory; nextCategories: TopicCategory[] } => {
-  let removedCategory: TopicCategory | undefined
-
-  const nextCategories = categories
-    .filter((category) => {
-      if (category.id === categoryId) {
-        removedCategory = category
-        return false
-      }
-
-      return true
-    })
-    .map((category) => {
-      if (!category.children?.length) {
-        return category
-      }
-
-      const result = removeCategoryNode(category.children, categoryId)
-      removedCategory = removedCategory ?? result.removed
-
-      return {
-        ...category,
-        children: result.nextCategories,
-      }
-    })
-
-  return {
-    removed: removedCategory,
-    nextCategories,
-  }
-}
-
-const moveCategoryNode = (
-  categories: TopicCategory[],
-  categoryId: string,
-  nextParentId: string,
-): TopicCategory[] => {
-  const { removed, nextCategories } = removeCategoryNode(categories, categoryId)
-
-  if (!removed) {
-    return categories
-  }
-
-  return insertChildCategory(nextCategories, nextParentId, removed)
-}
 
 type CategoryDrawerMode = 'create' | 'edit' | null
 
@@ -219,6 +116,7 @@ function TopicTreeItem({
   onToggle,
   onCreateCategory,
   onEditCategory,
+  onDeleteCategory,
 }: TopicTreeItemProps) {
   const hasChildren = Boolean(node.children?.length)
   const isExpanded = expandedCategoryIds.includes(node.id)
@@ -341,6 +239,7 @@ function TopicTreeItem({
                 size="small"
                 onClick={(event) => event.stopPropagation()}
                 sx={{ color: 'text.secondary', p: 0.5 }}
+                onClickCapture={() => onDeleteCategory(node.id)}
               >
                 <DeleteOutlineOutlinedIcon fontSize="small" />
               </IconButton>
@@ -363,6 +262,7 @@ function TopicTreeItem({
               onToggle={onToggle}
               onCreateCategory={onCreateCategory}
               onEditCategory={onEditCategory}
+              onDeleteCategory={onDeleteCategory}
             />
           ))}
         </Stack>
@@ -375,27 +275,107 @@ function TopicsPage() {
   const theme = useTheme()
   const isDesktop = useMediaQuery(theme.breakpoints.up('lg'))
   const { aiAgentId } = useParams<{ aiAgentId: string }>()
+  const location = useLocation()
   const navigate = useNavigate()
   const resolvedAiAgentId = resolveAiAgentId(aiAgentId)
+  const siteId = useMemo(
+    () => resolveSiteId(getSiteIdFromPathname(location.pathname)),
+    [location.pathname],
+  )
   const layoutRef = useRef<HTMLDivElement | null>(null)
   const [isTestDrawerOpen, setIsTestDrawerOpen] = useState(false)
   const [searchValue, setSearchValue] = useState('')
   const [selectedCategoryId, setSelectedCategoryId] = useState('all')
-  const [expandedCategoryIds, setExpandedCategoryIds] = useState<string[]>(['root'])
-  const [categories, setCategories] = useState<TopicCategory[]>(() =>
-    cloneTopicCategories(topicCategories),
-  )
-  const [rows, setRows] = useState<TopicRow[]>(initialTopicRows)
+  const [expandedCategoryIds, setExpandedCategoryIds] = useState<string[]>([rootTopicCategoryId])
+  const [categories, setCategories] = useState<TopicCategory[]>([])
+  const [topics, setTopics] = useState<TopicDefinition[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [categoryPanelWidth, setCategoryPanelWidth] = useState(220)
   const [isResizing, setIsResizing] = useState(false)
   const [isTopicDrawerOpen, setIsTopicDrawerOpen] = useState(false)
+  const [isCreatingTopic, setIsCreatingTopic] = useState(false)
   const [topicDraft, setTopicDraft] = useState<TopicDraft>(createTopicDraft())
+  const [pendingDeleteTopic, setPendingDeleteTopic] = useState<TopicTableRow | null>(null)
+  const [isDeletingTopic, setIsDeletingTopic] = useState(false)
   const [categoryDrawerMode, setCategoryDrawerMode] = useState<CategoryDrawerMode>(null)
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null)
+  const [isSavingCategory, setIsSavingCategory] = useState(false)
+  const [pendingDeleteCategoryId, setPendingDeleteCategoryId] = useState<string | null>(null)
+  const [isDeletingCategory, setIsDeletingCategory] = useState(false)
   const [categoryDraft, setCategoryDraft] = useState<CategoryFormValues>({
     name: '',
-    parentId: 'root',
+    parentId: rootTopicCategoryId,
   })
+  const locationState = location.state as { successMessage?: string } | null
+
+  useEffect(() => {
+    let cancelled = false
+
+    const loadTopics = async () => {
+      setLoading(true)
+      setError(null)
+
+      try {
+        const [nextCategories, nextTopics] = await Promise.all([
+          getTopicCategories(siteId, resolvedAiAgentId),
+          getTopics(siteId, resolvedAiAgentId),
+        ])
+
+        if (!cancelled) {
+          setCategories(nextCategories)
+          setTopics(nextTopics)
+        }
+      } catch (nextError) {
+        if (!cancelled) {
+          setCategories([])
+          setTopics([])
+          setError(nextError instanceof Error ? nextError.message : 'Failed to load topics.')
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false)
+        }
+      }
+    }
+
+    void loadTopics()
+
+    return () => {
+      cancelled = true
+    }
+  }, [resolvedAiAgentId, siteId])
+
+  useEffect(() => {
+    if (!locationState?.successMessage) {
+      return
+    }
+
+    setSuccessMessage(locationState.successMessage)
+    navigate(`${location.pathname}${location.search}`, { replace: true, state: null })
+  }, [location.pathname, location.search, locationState?.successMessage, navigate])
+
+  useEffect(() => {
+    if (selectedCategoryId === 'all') {
+      return
+    }
+
+    if (!findTopicCategoryById(categories, selectedCategoryId)) {
+      setSelectedCategoryId('all')
+    }
+  }, [categories, selectedCategoryId])
+
+  useEffect(() => {
+    if (topicDraft.categoryId && findTopicCategoryById(categories, topicDraft.categoryId)) {
+      return
+    }
+
+    setTopicDraft((current) => ({
+      ...current,
+      categoryId: rootTopicCategoryId,
+    }))
+  }, [categories, topicDraft.categoryId])
 
   useEffect(() => {
     if (!isDesktop || !isResizing) {
@@ -425,19 +405,31 @@ function TopicsPage() {
     }
   }, [isDesktop, isResizing])
 
-  const visibleRows = useMemo(() => {
-    return rows.filter((row) => {
-      const inCategory = selectedCategoryId === 'all' || row.categoryId === selectedCategoryId
-      const matchesSearch =
-        searchValue.trim().length === 0 ||
-        row.content.toLowerCase().includes(searchValue.trim().toLowerCase())
+  const visibleRows = useMemo<TopicTableRow[]>(() => {
+    return topics
+      .map((topic) => ({
+        id: topic.id,
+        content: topic.name,
+        secondaryValue: topic.answerMode === 'workflow' ? 'Workflow' : 'Natural Language',
+        categoryId: topic.categoryId,
+      }))
+      .filter((row) => {
+        const inCategory = selectedCategoryId === 'all' || row.categoryId === selectedCategoryId
+        const matchesSearch =
+          searchValue.trim().length === 0 ||
+          row.content.toLowerCase().includes(searchValue.trim().toLowerCase())
 
-      return inCategory && matchesSearch
-    })
-  }, [rows, searchValue, selectedCategoryId])
+        return inCategory && matchesSearch
+      })
+  }, [searchValue, selectedCategoryId, topics])
 
-  const topicCategoryOptions = useMemo(
-    () => buildCategoryOptions(categories),
+  const categoryTree = useMemo<TopicCategory[]>(
+    () => [allCategoriesNode, ...categories],
+    [categories],
+  )
+
+  const topicCategoryOptions = useMemo<CategoryFormOption[]>(
+    () => buildTopicCategoryOptions(categories),
     [categories],
   )
 
@@ -446,13 +438,21 @@ function TopicsPage() {
       return topicCategoryOptions
     }
 
-    const editingCategory = findCategoryById(categories, editingCategoryId)
+    const editingCategory = findTopicCategoryById(categories, editingCategoryId)
     if (!editingCategory) {
       return topicCategoryOptions
     }
 
-    return buildCategoryOptions(categories, collectCategoryIds(editingCategory.node))
+    return buildTopicCategoryOptions(categories, collectTopicCategoryIds(editingCategory.node))
   }, [categories, categoryDrawerMode, editingCategoryId, topicCategoryOptions])
+
+  const pendingDeleteCategory = useMemo(
+    () =>
+      pendingDeleteCategoryId
+        ? findTopicCategoryById(categories, pendingDeleteCategoryId)?.node ?? null
+        : null,
+    [categories, pendingDeleteCategoryId],
+  )
 
   const handleToggleCategory = (categoryId: string) => {
     setExpandedCategoryIds((current) =>
@@ -462,21 +462,17 @@ function TopicsPage() {
     )
   }
 
-  const handleDeleteTopic = (row: InstructionRow) => {
-    setRows((current) => current.filter((item) => item.id !== row.id))
-  }
-
   const handleOpenCreateCategoryDrawer = (parentId: string) => {
     setCategoryDrawerMode('create')
     setEditingCategoryId(null)
     setCategoryDraft({
       name: '',
-      parentId,
+      parentId: parentId === 'all' ? rootTopicCategoryId : parentId,
     })
   }
 
   const handleOpenEditCategoryDrawer = (categoryId: string) => {
-    const categoryMatch = findCategoryById(categories, categoryId)
+    const categoryMatch = findTopicCategoryById(categories, categoryId)
     if (!categoryMatch) {
       return
     }
@@ -485,69 +481,93 @@ function TopicsPage() {
     setEditingCategoryId(categoryId)
     setCategoryDraft({
       name: categoryMatch.node.label,
-      parentId: categoryMatch.parentId ?? 'root',
+      parentId: categoryMatch.parentId ?? rootTopicCategoryId,
     })
   }
 
   const handleCloseCategoryDrawer = () => {
     setCategoryDrawerMode(null)
     setEditingCategoryId(null)
+    setIsSavingCategory(false)
   }
 
-  const handleSaveCategory = () => {
-    if (categoryDraft.name.trim().length === 0 || categoryDraft.parentId.trim().length === 0) {
+  const handleSaveCategory = async () => {
+    const trimmedName = categoryDraft.name.trim()
+    const parentId = categoryDraft.parentId.trim()
+
+    if (trimmedName.length === 0 || parentId.length === 0) {
       return
     }
 
-    if (categoryDrawerMode === 'create') {
-      const nextCategoryId = `category-${Date.now()}`
-      setCategories((current) =>
-        insertChildCategory(current, categoryDraft.parentId, {
-          id: nextCategoryId,
-          label: categoryDraft.name.trim(),
-        }),
-      )
-      setExpandedCategoryIds((current) =>
-        current.includes(categoryDraft.parentId)
-          ? current
-          : [...current, categoryDraft.parentId],
-      )
-      setSelectedCategoryId(nextCategoryId)
-      handleCloseCategoryDrawer()
-      return
-    }
+    setIsSavingCategory(true)
+    setError(null)
 
-    if (!editingCategoryId) {
-      return
-    }
+    try {
+      if (categoryDrawerMode === 'create') {
+        const createdCategory = await createTopicCategory(siteId, resolvedAiAgentId, {
+          label: trimmedName,
+          parentId,
+        })
 
-    const currentParentId = findCategoryById(categories, editingCategoryId)?.parentId ?? 'root'
-
-    setCategories((current) => {
-      const renamedCategories = updateCategoryNode(current, editingCategoryId, (category) => ({
-        ...category,
-        label: categoryDraft.name.trim(),
-      }))
-
-      if (categoryDraft.parentId === currentParentId) {
-        return renamedCategories
+        setCategories((current) => insertTopicCategory(current, parentId, createdCategory))
+        setExpandedCategoryIds((current) =>
+          current.includes(parentId) ? current : [...current, parentId],
+        )
+        setSelectedCategoryId(createdCategory.id)
+        setSuccessMessage('Category created successfully.')
+        handleCloseCategoryDrawer()
+        return
       }
 
-      return moveCategoryNode(renamedCategories, editingCategoryId, categoryDraft.parentId)
-    })
-    handleCloseCategoryDrawer()
+      if (!editingCategoryId) {
+        return
+      }
+
+      const currentParentId =
+        findTopicCategoryById(categories, editingCategoryId)?.parentId ?? rootTopicCategoryId
+
+      await updateTopicCategory(siteId, resolvedAiAgentId, editingCategoryId, {
+        label: trimmedName,
+        parentId,
+      })
+
+      setCategories((current) => {
+        const renamedCategories = updateTopicCategoryTree(current, editingCategoryId, (category) => ({
+          ...category,
+          label: trimmedName,
+        }))
+
+        return currentParentId === parentId
+          ? renamedCategories
+          : moveTopicCategoryTree(renamedCategories, editingCategoryId, parentId)
+      })
+      setExpandedCategoryIds((current) =>
+        current.includes(parentId) ? current : [...current, parentId],
+      )
+      setSuccessMessage('Category updated successfully.')
+      handleCloseCategoryDrawer()
+    } catch (nextError) {
+      setError(nextError instanceof Error ? nextError.message : 'Failed to save category.')
+      setIsSavingCategory(false)
+    }
   }
 
   const handleOpenTopicDrawer = () => {
-    setTopicDraft(createTopicDraft())
+    const nextCategoryId =
+      selectedCategoryId !== 'all' && findTopicCategoryById(categories, selectedCategoryId)
+        ? selectedCategoryId
+        : rootTopicCategoryId
+
+    setTopicDraft(createTopicDraft(nextCategoryId))
     setIsTopicDrawerOpen(true)
   }
 
   const handleCloseTopicDrawer = () => {
     setIsTopicDrawerOpen(false)
+    setIsCreatingTopic(false)
   }
 
-  const handleCreateTopic = () => {
+  const handleCreateTopic = async () => {
     if (
       topicDraft.name.trim().length === 0 ||
       topicDraft.categoryId.trim().length === 0 ||
@@ -556,25 +576,117 @@ function TopicsPage() {
       return
     }
 
-    const nextTopic: TopicRow = {
-      id: `topic-${Date.now()}`,
-      content: topicDraft.name.trim(),
-      secondaryValue: 'Workflow',
-      categoryId: topicDraft.categoryId,
+    setIsCreatingTopic(true)
+    setError(null)
+
+    try {
+      const createdTopic = await createTopic(siteId, resolvedAiAgentId, {
+        id: 'new',
+        name: topicDraft.name.trim(),
+        categoryId: topicDraft.categoryId,
+        description: topicDraft.description.trim(),
+        answerMode: 'workflow',
+        naturalLanguageInstructions: '',
+        functionIds: [],
+      })
+
+      setTopics((current) => [createdTopic, ...current])
+      setSelectedCategoryId(createdTopic.categoryId)
+      setSuccessMessage('Topic created successfully.')
+      handleCloseTopicDrawer()
+    } catch (nextError) {
+      setError(nextError instanceof Error ? nextError.message : 'Failed to create topic.')
+      setIsCreatingTopic(false)
+    }
+  }
+
+  const handleCloseDeleteTopicDialog = () => {
+    if (isDeletingTopic) {
+      return
     }
 
-    setRows((current) => [nextTopic, ...current])
-    setSelectedCategoryId(topicDraft.categoryId)
-    setIsTopicDrawerOpen(false)
+    setPendingDeleteTopic(null)
+  }
+
+  const handleConfirmDeleteTopic = async () => {
+    if (!pendingDeleteTopic) {
+      return
+    }
+
+    setIsDeletingTopic(true)
+    setError(null)
+
+    try {
+      await deleteTopic(siteId, resolvedAiAgentId, pendingDeleteTopic.id)
+      setTopics((current) => current.filter((topic) => topic.id !== pendingDeleteTopic.id))
+      setSuccessMessage('Topic deleted successfully.')
+      setPendingDeleteTopic(null)
+    } catch (nextError) {
+      setError(nextError instanceof Error ? nextError.message : 'Failed to delete topic.')
+    } finally {
+      setIsDeletingTopic(false)
+    }
+  }
+
+  const handleCloseDeleteCategoryDialog = () => {
+    if (isDeletingCategory) {
+      return
+    }
+
+    setPendingDeleteCategoryId(null)
+  }
+
+  const handleConfirmDeleteCategory = async () => {
+    if (!pendingDeleteCategoryId) {
+      return
+    }
+
+    setIsDeletingCategory(true)
+    setError(null)
+
+    try {
+      await deleteTopicCategory(siteId, resolvedAiAgentId, pendingDeleteCategoryId)
+
+      const removalResult = removeTopicCategoryTree(categories, pendingDeleteCategoryId)
+      if (removalResult.removed) {
+        const removedCategoryIds = new Set(collectTopicCategoryIds(removalResult.removed))
+
+        setCategories(removalResult.nextCategories)
+        setTopics((current) =>
+          current.map((topic) =>
+            removedCategoryIds.has(topic.categoryId)
+              ? {
+                  ...topic,
+                  categoryId: rootTopicCategoryId,
+                }
+              : topic,
+          ),
+        )
+
+        if (removedCategoryIds.has(selectedCategoryId)) {
+          setSelectedCategoryId('all')
+        }
+      }
+
+      setSuccessMessage('Category deleted successfully. Topics moved to /.')
+      setPendingDeleteCategoryId(null)
+    } catch (nextError) {
+      setError(nextError instanceof Error ? nextError.message : 'Failed to delete category.')
+    } finally {
+      setIsDeletingCategory(false)
+    }
   }
 
   const isCreateTopicDisabled =
+    isCreatingTopic ||
     topicDraft.name.trim().length === 0 ||
     topicDraft.categoryId.trim().length === 0 ||
     topicDraft.description.trim().length === 0
 
   const isSaveCategoryDisabled =
-    categoryDraft.name.trim().length === 0 || categoryDraft.parentId.trim().length === 0
+    isSavingCategory ||
+    categoryDraft.name.trim().length === 0 ||
+    categoryDraft.parentId.trim().length === 0
 
   return (
     <>
@@ -594,8 +706,9 @@ function TopicsPage() {
         }
       >
         <Stack spacing={1.5} sx={{ mt: -1 }}>
+          {error ? <Alert severity="error">{error}</Alert> : null}
           <Stack direction="row" justifyContent="space-between" alignItems="center">
-            <Button variant="contained" onClick={handleOpenTopicDrawer}>
+            <Button variant="contained" onClick={handleOpenTopicDrawer} disabled={loading}>
               New Topic
             </Button>
             <TextField
@@ -625,35 +738,36 @@ function TopicsPage() {
               userSelect: isResizing ? 'none' : 'auto',
             }}
           >
-          <Card
-            sx={{
-              width: { xs: '100%', lg: categoryPanelWidth },
-              flexShrink: 0,
-            }}
-          >
-            <CardContent sx={{ p: 2 }}>
-              <Stack spacing={1.5}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-                  Categories
-                </Typography>
-                <Stack spacing={0.35}>
-                  {categories.map((node) => (
-                    <TopicTreeItem
-                      key={node.id}
-                      node={node}
-                      parentId={undefined}
-                      selectedCategoryId={selectedCategoryId}
-                      expandedCategoryIds={expandedCategoryIds}
-                      onSelect={setSelectedCategoryId}
-                      onToggle={handleToggleCategory}
-                      onCreateCategory={handleOpenCreateCategoryDrawer}
-                      onEditCategory={handleOpenEditCategoryDrawer}
-                    />
-                  ))}
+            <Card
+              sx={{
+                width: { xs: '100%', lg: categoryPanelWidth },
+                flexShrink: 0,
+              }}
+            >
+              <CardContent sx={{ p: 2 }}>
+                <Stack spacing={1.5}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                    Categories
+                  </Typography>
+                  <Stack spacing={0.35}>
+                    {categoryTree.map((node) => (
+                      <TopicTreeItem
+                        key={node.id}
+                        node={node}
+                        parentId={undefined}
+                        selectedCategoryId={selectedCategoryId}
+                        expandedCategoryIds={expandedCategoryIds}
+                        onSelect={setSelectedCategoryId}
+                        onToggle={handleToggleCategory}
+                        onCreateCategory={handleOpenCreateCategoryDrawer}
+                        onEditCategory={handleOpenEditCategoryDrawer}
+                        onDeleteCategory={setPendingDeleteCategoryId}
+                      />
+                    ))}
+                  </Stack>
                 </Stack>
-              </Stack>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
             <Box
               onMouseDown={() => setIsResizing(true)}
@@ -679,10 +793,14 @@ function TopicsPage() {
                 rows={visibleRows}
                 nameHeader="Name"
                 secondaryHeader="Answer Type"
+                showDelete={!loading}
                 onEdit={(row) =>
                   navigate(appRoutes.ai.aiAgentTopicEdit(row.id, resolvedAiAgentId))
                 }
-                onDelete={handleDeleteTopic}
+                onDelete={(row) => setPendingDeleteTopic(row)}
+                emptyStateMessage={
+                  loading ? 'Loading topics...' : 'No topics are available for this AI agent.'
+                }
                 footer={
                   <Box
                     sx={{
@@ -693,7 +811,7 @@ function TopicsPage() {
                     }}
                   >
                     <Typography variant="caption" color="text.secondary">
-                      Rows per page: 50&nbsp;&nbsp;&nbsp; 1-{visibleRows.length} of {visibleRows.length}
+                      Rows per page: 50&nbsp;&nbsp;&nbsp; {visibleRows.length === 0 ? '0-0' : `1-${visibleRows.length}`} of {visibleRows.length}
                     </Typography>
                   </Box>
                 }
@@ -767,7 +885,7 @@ function TopicsPage() {
             >
               Create
             </Button>
-            <Button variant="outlined" onClick={handleCloseTopicDrawer}>
+            <Button variant="outlined" onClick={handleCloseTopicDrawer} disabled={isCreatingTopic}>
               Cancel
             </Button>
           </Stack>
@@ -788,6 +906,91 @@ function TopicsPage() {
           isSubmitDisabled={isSaveCategoryDisabled}
         />
       </SideDrawer>
+      <Snackbar
+        open={Boolean(successMessage)}
+        autoHideDuration={3000}
+        onClose={() => setSuccessMessage(null)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert
+          severity="success"
+          variant="filled"
+          onClose={() => setSuccessMessage(null)}
+          sx={{ width: '100%' }}
+        >
+          {successMessage}
+        </Alert>
+      </Snackbar>
+      <Dialog
+        open={Boolean(pendingDeleteTopic)}
+        onClose={handleCloseDeleteTopicDialog}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>Delete Topic?</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary">
+            {pendingDeleteTopic ? (
+              <>
+                Are you sure you want to delete <strong>{pendingDeleteTopic.content}</strong>?
+                This action cannot be undone.
+              </>
+            ) : null}
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2.5 }}>
+          <Button
+            variant="outlined"
+            onClick={handleCloseDeleteTopicDialog}
+            disabled={isDeletingTopic}
+          >
+            Cancel
+          </Button>
+          <Button
+            color="error"
+            variant="contained"
+            onClick={handleConfirmDeleteTopic}
+            disabled={isDeletingTopic}
+          >
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog
+        open={Boolean(pendingDeleteCategory)}
+        onClose={handleCloseDeleteCategoryDialog}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>Delete Category?</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary">
+            {pendingDeleteCategory ? (
+              <>
+                Are you sure you want to delete <strong>{pendingDeleteCategory.label}</strong>?
+                Nested topics will be moved to <strong>/</strong>.
+              </>
+            ) : null}
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2.5 }}>
+          <Button
+            variant="outlined"
+            onClick={handleCloseDeleteCategoryDialog}
+            disabled={isDeletingCategory}
+          >
+            Cancel
+          </Button>
+          <Button
+            color="error"
+            variant="contained"
+            onClick={handleConfirmDeleteCategory}
+            disabled={isDeletingCategory}
+          >
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   )
 }

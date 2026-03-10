@@ -5,10 +5,8 @@ import { Button, Stack } from '@mui/material'
 import Page from '../../../../components/common/Page'
 import TestChatDrawer from '../../../../components/common/TestChatDrawer'
 import AnswerEditorCard from '../../../../components/topics/AnswerEditorCard'
-import {
-  eventDefinitions,
-  type TopicAnswerMode,
-} from '../../../../data/dashboard'
+import { eventDefinitions } from '../../../../data/dashboard'
+import { type TopicAnswerMode } from '../../../../data/topics'
 import { appRoutes, resolveAiAgentId } from '../../../../data/routes'
 
 function EditEventPage() {
