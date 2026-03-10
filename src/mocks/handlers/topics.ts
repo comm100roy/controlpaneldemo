@@ -1,6 +1,6 @@
 import { http, HttpResponse } from 'msw'
-import { rootTopicCategoryId, type TopicCategory, type TopicDefinition } from '../../data/topics'
-import { findTopicCategoryById } from '../../data/topicUtils'
+import { type TopicCategory, type TopicDefinition } from '../../data/topics'
+import { findTopicCategoryById, getRootTopicCategoryId } from '../../data/topicUtils'
 import {
   createScopedTopic,
   createScopedTopicCategory,
@@ -55,6 +55,9 @@ const getCategoryNotFoundResponse = (categoryId: string) =>
 
 const isCategoryPresent = (siteId: string, aiAgentId: string, categoryId: string) =>
   Boolean(findTopicCategoryById(getScopedTopicState(siteId, aiAgentId).categories, categoryId))
+
+const isRootCategory = (siteId: string, aiAgentId: string, categoryId: string) =>
+  getRootTopicCategoryId(getScopedTopicState(siteId, aiAgentId).categories) === categoryId
 
 export const topicHandlers = [
   http.get('/api/aiagent/topic-categories', ({ request }) => {
@@ -130,7 +133,10 @@ export const topicHandlers = [
       )
     }
 
-    if (categoryId === rootTopicCategoryId && parentId !== rootTopicCategoryId) {
+    if (
+      isRootCategory(requiredQueryParams.siteId, requiredQueryParams.aiAgentId, categoryId) &&
+      parentId !== categoryId
+    ) {
       return HttpResponse.json(
         { message: 'The root topic category cannot be moved.' },
         { status: 409 },
@@ -166,7 +172,7 @@ export const topicHandlers = [
       return HttpResponse.json({ message: 'Missing topic category id.' }, { status: 400 })
     }
 
-    if (categoryId === rootTopicCategoryId) {
+    if (isRootCategory(requiredQueryParams.siteId, requiredQueryParams.aiAgentId, categoryId)) {
       return HttpResponse.json(
         { message: 'The root topic category cannot be deleted.' },
         { status: 409 },

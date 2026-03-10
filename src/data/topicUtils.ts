@@ -6,6 +6,11 @@ export const cloneTopicCategories = (categories: TopicCategory[]): TopicCategory
     children: category.children ? cloneTopicCategories(category.children) : undefined,
   }))
 
+export const getRootTopicCategory = (categories: TopicCategory[]) => categories[0] ?? null
+
+export const getRootTopicCategoryId = (categories: TopicCategory[]) =>
+  getRootTopicCategory(categories)?.id ?? null
+
 export const findTopicCategoryById = (
   categories: TopicCategory[],
   categoryId: string,
