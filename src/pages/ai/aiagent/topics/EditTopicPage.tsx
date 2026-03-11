@@ -233,6 +233,8 @@ function EditTopicPage() {
             </Card>
 
             <AnswerEditorCard
+              siteId={siteId}
+              aiAgentId={resolvedAiAgentId}
               answerMode={answerMode}
               onAnswerModeChange={setAnswerMode}
               naturalLanguageInstructions={naturalLanguageInstructions}
