@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Navigate, useNavigate, useParams } from 'react-router-dom'
+import { useMemo, useState } from 'react'
+import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 import ScienceIcon from '@mui/icons-material/Science'
 import { Button, Stack } from '@mui/material'
 import Page from '../../../../components/common/Page'
@@ -7,13 +7,18 @@ import TestChatDrawer from '../../../../components/common/TestChatDrawer'
 import AnswerEditorCard from '../../../../components/topics/AnswerEditorCard'
 import { eventDefinitions } from '../../../../data/dashboard'
 import { type TopicAnswerMode } from '../../../../data/topics'
-import { appRoutes, resolveAiAgentId } from '../../../../data/routes'
+import { appRoutes, getSiteIdFromPathname, resolveAiAgentId, resolveSiteId } from '../../../../data/routes'
 
 function EditEventPage() {
   const { aiAgentId, eventId } = useParams<{ aiAgentId: string; eventId: string }>()
+  const location = useLocation()
   const navigate = useNavigate()
   const [isTestDrawerOpen, setIsTestDrawerOpen] = useState(false)
   const resolvedAiAgentId = resolveAiAgentId(aiAgentId)
+  const siteId = useMemo(
+    () => resolveSiteId(getSiteIdFromPathname(location.pathname)),
+    [location.pathname],
+  )
 
   const eventDefinition = eventDefinitions.find((item) => item.id === eventId)
 
@@ -48,6 +53,8 @@ function EditEventPage() {
         }
       >
         <AnswerEditorCard
+          siteId={siteId}
+          aiAgentId={resolvedAiAgentId}
           answerMode={answerMode}
           onAnswerModeChange={setAnswerMode}
           naturalLanguageInstructions={naturalLanguageInstructions}

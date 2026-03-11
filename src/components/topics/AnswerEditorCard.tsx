@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import AddIcon from '@mui/icons-material/Add'
 import DataObjectOutlinedIcon from '@mui/icons-material/DataObjectOutlined'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
@@ -10,6 +10,7 @@ import {
   Card,
   CardContent,
   Checkbox,
+  CircularProgress,
   Divider,
   IconButton,
   Link,
@@ -26,13 +27,14 @@ import {
 import { Link as RouterLink } from 'react-router-dom'
 import CornerToggleButtonGroup from '../common/CornerToggleButtonGroup'
 import SideDrawer from '../common/SideDrawer'
-import {
-  functionDefinitions,
-} from '../../data/dashboard'
+import { getFunctions } from '../../api/functions'
+import { type FunctionFormValues } from '../../data/dashboard'
 import { type TopicAnswerMode } from '../../data/topics'
 import TopicWorkflowPlaceholder from './TopicWorkflowPlaceholder'
 
 type AnswerEditorCardProps = {
+  siteId: string
+  aiAgentId: string
   answerMode: TopicAnswerMode
   onAnswerModeChange: (value: TopicAnswerMode) => void
   naturalLanguageInstructions: string
@@ -44,6 +46,8 @@ type AnswerEditorCardProps = {
 }
 
 function AnswerEditorCard({
+  siteId,
+  aiAgentId,
   answerMode,
   onAnswerModeChange,
   naturalLanguageInstructions,
@@ -57,13 +61,15 @@ function AnswerEditorCard({
   const [pendingFunctionIds, setPendingFunctionIds] = useState<string[]>(selectedFunctionIds)
   const [functionMenuAnchor, setFunctionMenuAnchor] = useState<null | HTMLElement>(null)
   const [activeFunctionId, setActiveFunctionId] = useState<string | null>(null)
+  const [availableFunctions, setAvailableFunctions] = useState<FunctionFormValues[]>([])
+  const [functionsLoading, setFunctionsLoading] = useState(false)
 
   const linkedFunctions = useMemo(
     () =>
-      functionDefinitions.filter((definition) =>
+      availableFunctions.filter((definition) =>
         selectedFunctionIds.includes(definition.id),
       ),
-    [selectedFunctionIds],
+    [selectedFunctionIds, availableFunctions],
   )
 
   const hasPendingFunctionChanges =
@@ -111,9 +117,22 @@ function AnswerEditorCard({
     )
   }
 
+  const fetchFunctions = useCallback(async () => {
+    setFunctionsLoading(true)
+    try {
+      const functions = await getFunctions(siteId, aiAgentId)
+      setAvailableFunctions(functions)
+    } catch {
+      // keep previously loaded data if available
+    } finally {
+      setFunctionsLoading(false)
+    }
+  }, [siteId, aiAgentId])
+
   const handleOpenAddFunctionsDrawer = () => {
     setPendingFunctionIds(selectedFunctionIds)
     setIsAddFunctionsDrawerOpen(true)
+    void fetchFunctions()
   }
 
   const handleCloseAddFunctionsDrawer = () => {
@@ -329,34 +348,40 @@ function AnswerEditorCard({
             <Typography variant="h6" sx={{ fontSize: 18, fontWeight: 700, mb: 1.5 }}>
               Select Functions
             </Typography>
-            <List disablePadding>
-              {functionDefinitions.map((definition) => (
-                <ListItemButton
-                  key={definition.id}
-                  onClick={() => handleTogglePendingFunction(definition.id)}
-                  sx={{ px: 0, borderRadius: 1 }}
-                >
-                  <ListItemIcon sx={{ minWidth: 40 }}>
-                    <Checkbox
-                      edge="start"
-                      checked={pendingFunctionIds.includes(definition.id)}
-                      tabIndex={-1}
-                      disableRipple
+            {functionsLoading ? (
+              <Stack alignItems="center" sx={{ py: 4 }}>
+                <CircularProgress size={28} />
+              </Stack>
+            ) : (
+              <List disablePadding>
+                {availableFunctions.map((definition) => (
+                  <ListItemButton
+                    key={definition.id}
+                    onClick={() => handleTogglePendingFunction(definition.id)}
+                    sx={{ px: 0, borderRadius: 1 }}
+                  >
+                    <ListItemIcon sx={{ minWidth: 40 }}>
+                      <Checkbox
+                        edge="start"
+                        checked={pendingFunctionIds.includes(definition.id)}
+                        tabIndex={-1}
+                        disableRipple
+                      />
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={definition.name}
+                      primaryTypographyProps={{ fontSize: 16 }}
                     />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary={definition.name}
-                    primaryTypographyProps={{ fontSize: 16 }}
-                  />
-                </ListItemButton>
-              ))}
-            </List>
+                  </ListItemButton>
+                ))}
+              </List>
+            )}
           </Box>
 
           <Stack direction="row" spacing={2}>
             <Button
               variant="contained"
-              disabled={!hasPendingFunctionChanges}
+              disabled={!hasPendingFunctionChanges || functionsLoading}
               onClick={handleAddFunctions}
             >
               Add
