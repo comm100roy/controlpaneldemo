@@ -39,7 +39,7 @@ const getRequiredQueryParams = (request: Request) => {
 
 const getScopeKey = (siteId: string, aiAgentId: string) => `${siteId}:${aiAgentId}`
 
-const getScopedFunctions = (siteId: string, aiAgentId: string) => {
+export const getScopedFunctions = (siteId: string, aiAgentId: string) => {
   const scopeKey = getScopeKey(siteId, aiAgentId)
   const existingDefinitions = functionsByScope.get(scopeKey)
 

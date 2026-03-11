@@ -22,6 +22,7 @@ import {
   type TopicAnswerMode,
   type TopicDefinition,
 } from '../../../../data/topics'
+import { type FunctionFormValues } from '../../../../data/dashboard'
 import { type TopicCategory } from '../../../../data/topicCategories'
 import { buildTopicCategoryOptions } from '../../../../data/topicUtils'
 import {
@@ -53,6 +54,7 @@ function EditTopicPage() {
   const [answerMode, setAnswerMode] = useState<TopicAnswerMode>('workflow')
   const [naturalLanguageInstructions, setNaturalLanguageInstructions] = useState('')
   const [selectedFunctionIds, setSelectedFunctionIds] = useState<string[]>([])
+  const [loadedFunctions, setLoadedFunctions] = useState<FunctionFormValues[]>([])
 
   useEffect(() => {
     if (!topicId) {
@@ -71,7 +73,7 @@ function EditTopicPage() {
 
       try {
         const [nextTopic, nextCategories] = await Promise.all([
-          getTopic(siteId, resolvedAiAgentId, topicId),
+          getTopic(siteId, resolvedAiAgentId, topicId, { include: ['functions'] }),
           getTopicCategories(siteId, resolvedAiAgentId),
         ])
 
@@ -84,6 +86,9 @@ function EditTopicPage() {
           setAnswerMode(nextTopic.answerMode)
           setNaturalLanguageInstructions(nextTopic.naturalLanguageInstructions)
           setSelectedFunctionIds(nextTopic.functionIds)
+          if (nextTopic.functions) {
+            setLoadedFunctions(nextTopic.functions)
+          }
         }
       } catch (nextError) {
         if (!cancelled) {
@@ -243,6 +248,7 @@ function EditTopicPage() {
               onSelectedFunctionIdsChange={setSelectedFunctionIds}
               manageFunctionsTo={appRoutes.ai.aiAgentFunctions(resolvedAiAgentId)}
               onViewFunction={handleViewSelectedFunction}
+              initialFunctions={loadedFunctions}
             />
 
             <Stack direction="row" spacing={2}>

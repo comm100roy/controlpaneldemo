@@ -1,7 +1,21 @@
-import type { TopicDefinition } from '../data/topics'
+import type { TopicDefinition, TopicWithIncludes } from '../data/topics'
 
-const buildTopicsUrl = (siteId: string, aiAgentId: string, topicId?: string) => {
+type BuildTopicsUrlOptions = {
+  siteId: string
+  aiAgentId: string
+  topicId?: string
+  include?: string[]
+}
+
+const buildTopicsUrl = ({ siteId, aiAgentId, topicId, include }: BuildTopicsUrlOptions) => {
   const searchParams = new URLSearchParams({ siteId, aiAgentId })
+
+  if (include) {
+    for (const entity of include) {
+      searchParams.append('include', entity)
+    }
+  }
+
   const path = topicId ? `/api/aiagent/topics/${encodeURIComponent(topicId)}` : '/api/aiagent/topics'
 
   return `${path}?${searchParams.toString()}`
@@ -17,7 +31,7 @@ const getErrorMessage = async (response: Response, fallbackMessage: string) => {
 }
 
 export async function getTopics(siteId: string, aiAgentId: string): Promise<TopicDefinition[]> {
-  const response = await fetch(buildTopicsUrl(siteId, aiAgentId))
+  const response = await fetch(buildTopicsUrl({ siteId, aiAgentId }))
 
   if (!response.ok) {
     throw new Error(await getErrorMessage(response, `Failed to load topics (${response.status})`))
@@ -30,14 +44,17 @@ export async function getTopic(
   siteId: string,
   aiAgentId: string,
   topicId: string,
-): Promise<TopicDefinition> {
-  const response = await fetch(buildTopicsUrl(siteId, aiAgentId, topicId))
+  options?: { include?: string[] },
+): Promise<TopicWithIncludes> {
+  const response = await fetch(
+    buildTopicsUrl({ siteId, aiAgentId, topicId, include: options?.include }),
+  )
 
   if (!response.ok) {
     throw new Error(await getErrorMessage(response, `Failed to load topic (${response.status})`))
   }
 
-  return response.json() as Promise<TopicDefinition>
+  return response.json() as Promise<TopicWithIncludes>
 }
 
 export async function createTopic(
@@ -45,7 +62,7 @@ export async function createTopic(
   aiAgentId: string,
   topic: TopicDefinition,
 ): Promise<TopicDefinition> {
-  const response = await fetch(buildTopicsUrl(siteId, aiAgentId), {
+  const response = await fetch(buildTopicsUrl({ siteId, aiAgentId }), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -65,7 +82,7 @@ export async function updateTopic(
   aiAgentId: string,
   topic: TopicDefinition,
 ): Promise<TopicDefinition> {
-  const response = await fetch(buildTopicsUrl(siteId, aiAgentId, topic.id), {
+  const response = await fetch(buildTopicsUrl({ siteId, aiAgentId, topicId: topic.id }), {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
@@ -85,7 +102,7 @@ export async function deleteTopic(
   aiAgentId: string,
   topicId: string,
 ): Promise<void> {
-  const response = await fetch(buildTopicsUrl(siteId, aiAgentId, topicId), {
+  const response = await fetch(buildTopicsUrl({ siteId, aiAgentId, topicId }), {
     method: 'DELETE',
   })
 

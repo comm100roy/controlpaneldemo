@@ -14,6 +14,7 @@ import {
   updateScopedTopic,
   updateScopedTopicCategory,
 } from './topicStore'
+import { getScopedFunctions } from './functions'
 
 type TopicCategoryMutation = {
   label: string
@@ -213,9 +214,19 @@ export const topicHandlers = [
       return HttpResponse.json({ message: 'Missing topic id.' }, { status: 400 })
     }
 
-    const topic = getScopedTopic(requiredQueryParams.siteId, requiredQueryParams.aiAgentId, topicId)
+    const { siteId, aiAgentId } = requiredQueryParams
+    const topic = getScopedTopic(siteId, aiAgentId, topicId)
     if (!topic) {
       return HttpResponse.json({ message: `Topic "${topicId}" was not found.` }, { status: 404 })
+    }
+
+    const url = new URL(request.url)
+    const includes = url.searchParams.getAll('include')
+
+    if (includes.includes('functions')) {
+      const allFunctions = getScopedFunctions(siteId, aiAgentId)
+      const topicFunctions = allFunctions.filter((fn) => topic.functionIds.includes(fn.id))
+      return HttpResponse.json({ ...topic, functions: topicFunctions })
     }
 
     return HttpResponse.json(topic)
