@@ -187,7 +187,8 @@ function EditTopicPage() {
                   <Grid size={{ xs: 12, md: 6 }}>
                     <TextField
                       fullWidth
-                      label="Name *"
+                      required
+                      label="Name"
                       value={name}
                       onChange={(event) => setName(event.target.value)}
                     />
@@ -204,7 +205,8 @@ function EditTopicPage() {
                     <TextField
                       select
                       fullWidth
-                      label="Category *"
+                      required
+                      label="Category"
                       value={categoryId}
                       onChange={(event) => setCategoryId(event.target.value)}
                     >
@@ -220,7 +222,8 @@ function EditTopicPage() {
                       fullWidth
                       multiline
                       minRows={4}
-                      label="Description *"
+                      required
+                      label="Description"
                       value={description}
                       onChange={(event) => setDescription(event.target.value)}
                     />

@@ -157,7 +157,13 @@ function FunctionForm({ initialValues, submitting = false, onSubmit }: FunctionF
         <CardContent sx={{ p: { xs: 2, md: 2.5 } }}>
           <Grid container spacing={2.5}>
             <Grid size={{ xs: 12, md: 6 }}>
-              <TextField fullWidth label="Name *" value={name} onChange={(event) => setName(event.target.value)} />
+              <TextField
+                fullWidth
+                required
+                label="Name"
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+              />
               <Typography variant="caption" color="text.secondary" sx={{ mt: 0.75, display: 'block' }}>
                 The function name can only contain a-z, A-Z, 0-9, underscores, or dashes, with a
                 maximum length of 256 characters.
@@ -195,7 +201,8 @@ function FunctionForm({ initialValues, submitting = false, onSubmit }: FunctionF
                 <TextField
                   fullWidth
                   size="small"
-                  label="Name *"
+                  required
+                  label="Name"
                   value={row.name}
                   onChange={(event) => updateInputRow(index, 'name', event.target.value)}
                 />
@@ -282,7 +289,8 @@ function FunctionForm({ initialValues, submitting = false, onSubmit }: FunctionF
               <TextField
                 fullWidth
                 size="small"
-                label="URL *"
+                required
+                label="URL"
                 value={url}
                 onChange={(event) => setUrl(event.target.value)}
               />
@@ -308,7 +316,8 @@ function FunctionForm({ initialValues, submitting = false, onSubmit }: FunctionF
                 <TextField
                   fullWidth
                   size="small"
-                  label="Key *"
+                  required
+                  label="Key"
                   value={row.key}
                   onChange={(event) => updateHeaderRow(index, 'key', event.target.value)}
                 />
@@ -317,7 +326,8 @@ function FunctionForm({ initialValues, submitting = false, onSubmit }: FunctionF
                 <TextField
                   fullWidth
                   size="small"
-                  label="Value *"
+                  required
+                  label="Value"
                   value={row.value}
                   onChange={(event) => updateHeaderRow(index, 'value', event.target.value)}
                   InputProps={{
@@ -414,7 +424,8 @@ function FunctionForm({ initialValues, submitting = false, onSubmit }: FunctionF
                 <TextField
                   fullWidth
                   size="small"
-                  label="Response key *"
+                  required
+                  label="Response key"
                   value={row.responseKey}
                   onChange={(event) => updateOutputRow(index, 'responseKey', event.target.value)}
                 />

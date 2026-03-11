@@ -226,7 +226,8 @@ function AiAgentForm({
         <Stack spacing={2.25}>
           <TextField
             fullWidth
-            label="Name *"
+            required
+            label="Name"
             value={name}
             onChange={(event) => setName(event.target.value)}
           />
@@ -236,7 +237,8 @@ function AiAgentForm({
               <TextField
                 select
                 fullWidth
-                label="Language *"
+                required
+                label="Language"
                 value={language}
                 onChange={(event) => setLanguage(event.target.value)}
               >
@@ -249,7 +251,8 @@ function AiAgentForm({
               <TextField
                 select
                 fullWidth
-                label="Channels *"
+                required
+                label="Channels"
                 value={channel}
                 onChange={(event) => setChannel(event.target.value)}
               >
@@ -262,7 +265,8 @@ function AiAgentForm({
               <TextField
                 select
                 fullWidth
-                label="Tone *"
+                required
+                label="Tone"
                 value={tone}
                 onChange={(event) => setTone(event.target.value)}
               >

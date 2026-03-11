@@ -92,6 +92,13 @@ export const appTheme = createTheme({
         },
       },
     },
+    MuiFormLabel: {
+      styleOverrides: {
+        asterisk: ({ theme }) => ({
+          color: theme.palette.error.main,
+        }),
+      },
+    },
     MuiChip: {
       styleOverrides: {
         root: {
