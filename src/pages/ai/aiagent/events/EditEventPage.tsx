@@ -1,11 +1,12 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 import ScienceIcon from '@mui/icons-material/Science'
 import { Button, Stack } from '@mui/material'
+import { getFunctions } from '../../../../api/functions'
 import Page from '../../../../components/common/Page'
 import TestChatDrawer from '../../../../components/common/TestChatDrawer'
 import AnswerEditorCard from '../../../../components/topics/AnswerEditorCard'
-import { eventDefinitions } from '../../../../data/dashboard'
+import { eventDefinitions, type FunctionFormValues } from '../../../../data/dashboard'
 import { type TopicAnswerMode } from '../../../../data/topics'
 import { appRoutes, getSiteIdFromPathname, resolveAiAgentId, resolveSiteId } from '../../../../data/routes'
 
@@ -31,6 +32,33 @@ function EditEventPage() {
   const [selectedFunctionIds, setSelectedFunctionIds] = useState<string[]>(
     eventDefinition?.functionIds ?? [],
   )
+  const [loadedFunctions, setLoadedFunctions] = useState<FunctionFormValues[]>([])
+
+  useEffect(() => {
+    if (!eventDefinition || eventDefinition.functionIds.length === 0) return
+
+    let cancelled = false
+
+    const loadFunctions = async () => {
+      try {
+        const allFunctions = await getFunctions(siteId, resolvedAiAgentId)
+        if (!cancelled) {
+          const linkedFns = allFunctions.filter((fn) =>
+            eventDefinition.functionIds.includes(fn.id),
+          )
+          setLoadedFunctions(linkedFns)
+        }
+      } catch {
+        // keep empty - functions will load when drawer is opened
+      }
+    }
+
+    void loadFunctions()
+
+    return () => {
+      cancelled = true
+    }
+  }, [eventDefinition, siteId, resolvedAiAgentId])
 
   if (!eventDefinition) {
     return <Navigate to={appRoutes.ai.aiAgentEvents(resolvedAiAgentId)} replace />
@@ -65,6 +93,7 @@ function EditEventPage() {
           onViewFunction={(functionId) =>
             navigate(appRoutes.ai.aiAgentFunctionEdit(functionId, resolvedAiAgentId))
           }
+          initialFunctions={loadedFunctions}
         />
 
         <Stack direction="row" spacing={2}>

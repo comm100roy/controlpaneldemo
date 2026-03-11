@@ -1,3 +1,5 @@
+import type { FunctionFormValues } from './dashboard'
+
 export type TopicAnswerMode = 'workflow' | 'natural-language'
 
 export type TopicDefinition = {
@@ -8,6 +10,10 @@ export type TopicDefinition = {
   answerMode: TopicAnswerMode
   naturalLanguageInstructions: string
   functionIds: string[]
+}
+
+export type TopicWithIncludes = TopicDefinition & {
+  functions?: FunctionFormValues[]
 }
 
 export type TopicDefinitionSeed = {

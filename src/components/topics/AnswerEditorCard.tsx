@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import AddIcon from '@mui/icons-material/Add'
 import DataObjectOutlinedIcon from '@mui/icons-material/DataObjectOutlined'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
@@ -43,6 +43,7 @@ type AnswerEditorCardProps = {
   onSelectedFunctionIdsChange: (ids: string[]) => void
   manageFunctionsTo: string
   onViewFunction: (functionId: string) => void
+  initialFunctions?: FunctionFormValues[]
 }
 
 function AnswerEditorCard({
@@ -56,13 +57,26 @@ function AnswerEditorCard({
   onSelectedFunctionIdsChange,
   manageFunctionsTo,
   onViewFunction,
+  initialFunctions,
 }: AnswerEditorCardProps) {
   const [isAddFunctionsDrawerOpen, setIsAddFunctionsDrawerOpen] = useState(false)
   const [pendingFunctionIds, setPendingFunctionIds] = useState<string[]>(selectedFunctionIds)
   const [functionMenuAnchor, setFunctionMenuAnchor] = useState<null | HTMLElement>(null)
   const [activeFunctionId, setActiveFunctionId] = useState<string | null>(null)
-  const [availableFunctions, setAvailableFunctions] = useState<FunctionFormValues[]>([])
+  const [availableFunctions, setAvailableFunctions] = useState<FunctionFormValues[]>(
+    initialFunctions ?? [],
+  )
   const [functionsLoading, setFunctionsLoading] = useState(false)
+
+  useEffect(() => {
+    if (initialFunctions && initialFunctions.length > 0) {
+      setAvailableFunctions((current) => {
+        const existingIds = new Set(current.map((fn) => fn.id))
+        const newFunctions = initialFunctions.filter((fn) => !existingIds.has(fn.id))
+        return newFunctions.length > 0 ? [...current, ...newFunctions] : current
+      })
+    }
+  }, [initialFunctions])
 
   const linkedFunctions = useMemo(
     () =>
