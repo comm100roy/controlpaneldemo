@@ -56,11 +56,13 @@ Important behavior:
 - Registered handlers: `src/mocks/handlers/index.ts`
 - Main mock domains:
   - `src/mocks/handlers/aiAgents.ts`
-  - `src/mocks/handlers/functions.ts`
+  - `src/mocks/handlers/functions.ts` (store exported via `getScopedFunctions`)
+  - `src/mocks/handlers/topics.ts` (store in `src/mocks/handlers/topicStore.ts`)
   - `src/mocks/handlers/spotlights.ts`
 - Frontend API wrappers:
   - `src/api/aiAgents.ts`
   - `src/api/functions.ts`
+  - `src/api/topics.ts`
   - `src/api/spotlights.ts`
 
 Important behavior:
@@ -68,6 +70,21 @@ Important behavior:
 - MSW is enabled by default. In `src/main.tsx`, mocking is disabled only when `VITE_ENABLE_MSW === 'false'`.
 - GitHub Pages deployment explicitly builds with `VITE_ENABLE_MSW: 'true'`.
 - Mock state is in-memory and scoped by query parameters such as `siteId` and `aiAgentId`.
+
+### `include` query parameter
+
+GET-single endpoints support an optional `include` query parameter to embed related entities in the response. The parameter can appear multiple times to include several entity types.
+
+Example: `GET /api/aiagent/topics/:topicId?siteId=1&aiAgentId=abc&include=functions`
+
+When `include=functions` is present, the topic response adds a `functions` array containing the full function objects whose IDs are in the topic's `functionIds`. The response type for this is `TopicWithIncludes` (defined in `src/data/topics.ts`).
+
+When adding a new entity relationship, follow this pattern:
+
+1. Export the related store's lookup function (e.g. `getScopedFunctions` from the functions handler).
+2. In the parent entity's GET-single handler, read `url.searchParams.getAll('include')` and resolve matching related data.
+3. Define an extended response type (`EntityWithIncludes`) in the data layer.
+4. Update the API wrapper to accept an optional `include` array and append it to the query string.
 
 If you are wiring a real backend:
 
@@ -109,6 +126,8 @@ If you are wiring a real backend:
 
 - `src/data/aiAgents.ts` - AI agent records and default AI agent id
 - `src/data/dashboard.ts` - dashboard snapshots, topic/event/function demo data, knowledge rows
+- `src/data/topics.ts` - topic type definitions (`TopicDefinition`, `TopicWithIncludes`) and seed data
+- `src/data/topicCategories.ts` - topic category types and seed data
 - `src/data/aiInsights.ts` - AI insights seed data
 - `src/data/navigation.tsx` - sidebar metadata
 
@@ -167,6 +186,12 @@ Notes:
 - Some screens use API wrappers + MSW-backed CRUD state.
 - Some screens still render directly from static seed data in `src/data/dashboard.ts`.
 - Before refactoring, confirm whether a page is truly live CRUD or only a seeded UI demo.
+
+Edit pages and edit drawers must fetch the single entity from the API on mount to ensure up-to-date data. Use the `include` parameter to embed related entities when needed (e.g. `getTopic(siteId, aiAgentId, topicId, { include: ['functions'] })`). Pass the included data to child components via props (e.g. `initialFunctions`) so related items render immediately without a separate fetch. When adding a new edit page or drawer, follow this pattern:
+
+1. Call the GET-single API in a `useEffect` on mount, with `include` for any related entities the UI needs.
+2. Store the included related data in component state.
+3. Pass it to child components so they can render without waiting for a user-triggered fetch.
 
 ### UI patterns
 
