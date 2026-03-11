@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import ArrowBackOutlinedIcon from '@mui/icons-material/ArrowBackOutlined'
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined'
 import LightbulbOutlinedIcon from '@mui/icons-material/LightbulbOutlined'
@@ -20,25 +20,40 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import { Link as RouterLink, useParams } from 'react-router-dom'
+import { Link as RouterLink, useLocation, useParams } from 'react-router-dom'
 import Page from '../../../../components/common/Page'
 import SideDrawer from '../../../../components/common/SideDrawer'
 import TestChatDrawer from '../../../../components/common/TestChatDrawer'
 import DataTable from '../../../../components/common/DataTable'
 import {
-  instructionRows as initialInstructionRows,
   instructionTemplates,
   type InstructionTemplate,
 } from '../../../../data/dashboard'
-import { appRoutes, resolveAiAgentId } from '../../../../data/routes'
+import { appRoutes, getSiteIdFromPathname, resolveAiAgentId, resolveSiteId } from '../../../../data/routes'
 import type { InstructionRow } from '../../../../components/common/DataTable'
+import {
+  getInstructions,
+  createInstruction,
+  updateInstruction,
+  deleteInstruction,
+  type InstructionRecord,
+} from '../../../../api/instructions'
 
 type DrawerView = 'templates' | 'form' | null
 const maxInstructions = 20
 
 function InstructionsPage() {
   const { aiAgentId } = useParams<{ aiAgentId: string }>()
-  const [rows, setRows] = useState<InstructionRow[]>(initialInstructionRows)
+  const location = useLocation()
+  const resolvedAiAgentId = resolveAiAgentId(aiAgentId)
+  const siteId = useMemo(
+    () => resolveSiteId(getSiteIdFromPathname(location.pathname)),
+    [location.pathname],
+  )
+
+  const [rows, setRows] = useState<InstructionRow[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null)
   const [drawerView, setDrawerView] = useState<DrawerView>(null)
   const [isTestDrawerOpen, setIsTestDrawerOpen] = useState(false)
@@ -46,16 +61,67 @@ function InstructionsPage() {
   const [editingInstructionId, setEditingInstructionId] = useState<string | null>(null)
   const [instructionPendingDelete, setInstructionPendingDelete] =
     useState<InstructionRow | null>(null)
-  const resolvedAiAgentId = resolveAiAgentId(aiAgentId)
+  const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   const isMenuOpen = Boolean(menuAnchor)
   const isDrawerOpen = drawerView !== null
   const isAtInstructionLimit = rows.length >= maxInstructions
   const isEditingInstruction = editingInstructionId !== null
   const isSaveDisabled =
+    saving ||
     draftInstruction.trim().length === 0 ||
     draftInstruction.trim().length > 500 ||
     (!isEditingInstruction && isAtInstructionLimit)
+
+  const toRow = (record: InstructionRecord): InstructionRow => ({
+    id: record.id,
+    content: record.content,
+  })
+
+  const fetchInstructions = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+
+    try {
+      const records = await getInstructions(siteId, resolvedAiAgentId)
+      setRows(records.map(toRow))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load instructions.')
+    } finally {
+      setLoading(false)
+    }
+  }, [siteId, resolvedAiAgentId])
+
+  useEffect(() => {
+    let cancelled = false
+
+    const load = async () => {
+      setLoading(true)
+      setError(null)
+
+      try {
+        const records = await getInstructions(siteId, resolvedAiAgentId)
+        if (!cancelled) {
+          setRows(records.map(toRow))
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : 'Failed to load instructions.')
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false)
+        }
+      }
+    }
+
+    void load()
+
+    return () => {
+      cancelled = true
+    }
+  }, [siteId, resolvedAiAgentId, fetchInstructions])
 
   const handleOpenMenu = (event: React.MouseEvent<HTMLElement>) => {
     setMenuAnchor(event.currentTarget)
@@ -102,41 +168,55 @@ function InstructionsPage() {
     setInstructionPendingDelete(null)
   }
 
-  const handleConfirmDeleteInstruction = () => {
+  const handleConfirmDeleteInstruction = async () => {
     if (!instructionPendingDelete) {
       return
     }
 
-    setRows((current) =>
-      current.filter((row) => row.id !== instructionPendingDelete.id),
-    )
-    setInstructionPendingDelete(null)
+    try {
+      setDeleting(true)
+      setError(null)
+      await deleteInstruction(siteId, resolvedAiAgentId, instructionPendingDelete.id)
+      setRows((current) =>
+        current.filter((row) => row.id !== instructionPendingDelete.id),
+      )
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete instruction.')
+    } finally {
+      setDeleting(false)
+      setInstructionPendingDelete(null)
+    }
   }
 
-  const handleSaveInstruction = () => {
+  const handleSaveInstruction = async () => {
     if (isSaveDisabled) {
       return
     }
 
-    if (editingInstructionId) {
-      setRows((current) =>
-        current.map((row) =>
-          row.id === editingInstructionId
-            ? { ...row, content: draftInstruction.trim() }
-            : row,
-        ),
-      )
+    const content = draftInstruction.trim()
+
+    try {
+      setSaving(true)
+      setError(null)
+
+      if (editingInstructionId) {
+        const updated = await updateInstruction(siteId, resolvedAiAgentId, editingInstructionId, content)
+        setRows((current) =>
+          current.map((row) =>
+            row.id === editingInstructionId ? toRow(updated) : row,
+          ),
+        )
+      } else {
+        const created = await createInstruction(siteId, resolvedAiAgentId, content)
+        setRows((current) => [toRow(created), ...current])
+      }
+
       handleCloseDrawer()
-      return
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save instruction.')
+    } finally {
+      setSaving(false)
     }
-
-    const nextRow: InstructionRow = {
-      id: `custom-${Date.now()}`,
-      content: draftInstruction.trim(),
-    }
-
-    setRows((current) => [nextRow, ...current])
-    handleCloseDrawer()
   }
 
   return (
@@ -179,11 +259,24 @@ function InstructionsPage() {
               {rows.length} of {maxInstructions} used
             </Typography>
           </Stack>
-          <DataTable
-            rows={rows}
-            onEdit={handleEditInstruction}
-            onDelete={handleRequestDeleteInstruction}
-          />
+
+          {error ? (
+            <Typography variant="body2" color="error.main">
+              {error}
+            </Typography>
+          ) : null}
+
+          {loading ? (
+            <Typography variant="body2" color="text.secondary">
+              Loading instructions...
+            </Typography>
+          ) : (
+            <DataTable
+              rows={rows}
+              onEdit={handleEditInstruction}
+              onDelete={handleRequestDeleteInstruction}
+            />
+          )}
         </Stack>
       </Page>
 
@@ -339,9 +432,9 @@ function InstructionsPage() {
                 disabled={isSaveDisabled}
                 onClick={handleSaveInstruction}
               >
-                Validate & Save
+                {saving ? 'Saving...' : 'Validate & Save'}
               </Button>
-              <Button variant="outlined" onClick={handleCloseDrawer}>
+              <Button variant="outlined" onClick={handleCloseDrawer} disabled={saving}>
                 Cancel
               </Button>
             </Stack>
@@ -370,15 +463,16 @@ function InstructionsPage() {
           ) : null}
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2.5 }}>
-          <Button variant="outlined" onClick={handleCloseDeleteDialog}>
+          <Button variant="outlined" onClick={handleCloseDeleteDialog} disabled={deleting}>
             Cancel
           </Button>
           <Button
             variant="contained"
             color="error"
             onClick={handleConfirmDeleteInstruction}
+            disabled={deleting}
           >
-            Delete
+            {deleting ? 'Deleting...' : 'Delete'}
           </Button>
         </DialogActions>
       </Dialog>

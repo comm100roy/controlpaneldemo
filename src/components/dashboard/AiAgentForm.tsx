@@ -29,7 +29,6 @@ export type AiAgentFormValues = {
   channel: string
   tone: string
   description: string
-  instructions: string
   paymentStatus: 'Paid' | 'Trial'
 }
 
@@ -39,7 +38,6 @@ type AiAgentFormProps = {
   initialChannel: string
   initialTone?: string
   initialDescription: string
-  initialInstructions?: string
   initialPaymentStatus?: 'Paid' | 'Trial'
   paidAgentCount?: number
   paidAgentLimit?: number
@@ -57,7 +55,6 @@ function AiAgentForm({
   initialChannel,
   initialTone = 'Friendly',
   initialDescription,
-  initialInstructions = '',
   initialPaymentStatus = 'Paid',
   paidAgentCount = 80,
   paidAgentLimit = 101,
@@ -73,7 +70,6 @@ function AiAgentForm({
   const [channel, setChannel] = useState(initialChannel)
   const [tone, setTone] = useState(initialTone)
   const [description, setDescription] = useState(initialDescription)
-  const [instructions, setInstructions] = useState(initialInstructions)
   const [paymentStatus, setPaymentStatus] = useState<'Paid' | 'Trial'>(initialPaymentStatus)
   const [mode, setMode] = useState<'form' | 'avatar'>('form')
   const [selectedAvatarId, setSelectedAvatarId] = useState<AgentAvatarVariantId>('classic')
@@ -104,7 +100,6 @@ function AiAgentForm({
       channel,
       tone,
       description: description.trim(),
-      instructions: instructions.trim(),
       paymentStatus,
     })
   }
@@ -285,20 +280,6 @@ function AiAgentForm({
             value={description}
             onChange={(event) => setDescription(event.target.value)}
           />
-
-          <Box>
-            <TextField
-              fullWidth
-              multiline
-              minRows={4}
-              label="Instructions"
-              value={instructions}
-              onChange={(event) => setInstructions(event.target.value)}
-            />
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.75 }}>
-              Guide your AI Agent&apos;s actions: define what it can and cannot do.
-            </Typography>
-          </Box>
 
           <Box>
             <Typography variant="h6" sx={{ fontWeight: 700 }}>
