@@ -33,7 +33,8 @@ function CategoryForm({
     <Stack spacing={3}>
       <TextField
         fullWidth
-        label="Name *"
+        required
+        label="Name"
         value={values.name}
         onChange={(event) => onChange({ ...values, name: event.target.value })}
       />
@@ -41,7 +42,8 @@ function CategoryForm({
       <TextField
         select
         fullWidth
-        label="Parent *"
+        required
+        label="Parent"
         value={values.parentId}
         onChange={(event) => onChange({ ...values, parentId: event.target.value })}
       >

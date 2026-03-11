@@ -53,10 +53,11 @@ function NewWebpageContentDrawer({ open, onClose }: NewWebpageContentDrawerProps
         />
 
         <Stack spacing={1}>
-          <FormControl fullWidth size="small">
-            <InputLabel>URL *</InputLabel>
+          <FormControl fullWidth size="small" required>
+            <InputLabel>URL</InputLabel>
             <Select
-              label="URL *"
+              required
+              label="URL"
               value={selectedWebsite}
               onChange={(event) => setSelectedWebsite(event.target.value)}
               sx={{ bgcolor: 'common.white' }}

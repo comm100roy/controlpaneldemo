@@ -34,7 +34,8 @@ function SpotlightForm({ initialValues, submitting = false, onSave, cancelTo }: 
           <Stack spacing={2}>
             <TextField
               fullWidth
-              label="Name *"
+              required
+              label="Name"
               value={name}
               onChange={(event) => setName(event.target.value)}
               sx={{ maxWidth: 460 }}
@@ -43,7 +44,8 @@ function SpotlightForm({ initialValues, submitting = false, onSave, cancelTo }: 
               fullWidth
               multiline
               minRows={4}
-              label="Description *"
+              required
+              label="Description"
               value={description}
               onChange={(event) => setDescription(event.target.value)}
               sx={{ maxWidth: 460 }}

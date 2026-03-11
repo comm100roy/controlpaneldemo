@@ -852,7 +852,8 @@ function TopicsPage() {
           <Box>
             <TextField
               fullWidth
-              label="Name *"
+              required
+              label="Name"
               value={topicDraft.name}
               onChange={(event) =>
                 setTopicDraft((current) => ({ ...current, name: event.target.value }))
@@ -871,7 +872,8 @@ function TopicsPage() {
           <TextField
             select
             fullWidth
-            label="Category *"
+            required
+            label="Category"
             value={topicDraft.categoryId}
             onChange={(event) =>
               setTopicDraft((current) => ({ ...current, categoryId: event.target.value }))
@@ -888,7 +890,8 @@ function TopicsPage() {
             fullWidth
             multiline
             minRows={4}
-            label="Description *"
+            required
+            label="Description"
             value={topicDraft.description}
             onChange={(event) =>
               setTopicDraft((current) => ({ ...current, description: event.target.value }))
