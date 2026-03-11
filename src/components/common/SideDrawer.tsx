@@ -9,9 +9,18 @@ type SideDrawerProps = {
   children: ReactNode
   width?: number | string | { xs?: string | number; sm?: string | number; md?: string | number; lg?: string | number; xl?: string | number }
   titleActions?: ReactNode
+  titleDescription?: ReactNode
 }
 
-function SideDrawer({ open, title, onClose, children, width, titleActions }: SideDrawerProps) {
+function SideDrawer({
+  open,
+  title,
+  onClose,
+  children,
+  width,
+  titleActions,
+  titleDescription,
+}: SideDrawerProps) {
   return (
     <Drawer
       anchor="right"
@@ -53,14 +62,25 @@ function SideDrawer({ open, title, onClose, children, width, titleActions }: Sid
           </Button>
         </Box>
 
-        <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={2}>
-          {typeof title === 'string' ? (
-            <Typography variant="h5" sx={{ fontWeight: 700 }}>
-              {title}
-            </Typography>
-          ) : (
-            title
-          )}
+        <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={2}>
+          <Stack spacing={0.5} sx={{ minWidth: 0, flex: 1 }}>
+            {typeof title === 'string' ? (
+              <Typography variant="h5" sx={{ fontWeight: 700 }}>
+                {title}
+              </Typography>
+            ) : (
+              title
+            )}
+            {titleDescription ? (
+              typeof titleDescription === 'string' ? (
+                <Typography variant="body2" color="text.secondary">
+                  {titleDescription}
+                </Typography>
+              ) : (
+                titleDescription
+              )
+            ) : null}
+          </Stack>
           {titleActions}
         </Stack>
 

@@ -139,7 +139,11 @@ export const getLevel1Navigation = (siteId?: string): Level1NavItem[] => {
             { label: 'Knowledge', segment: 'knowledge', path: appRoutes.ai.aiAgentKnowledge() },
             { label: 'Topics', segment: 'topics', path: appRoutes.ai.aiAgentTopics() },
             { label: 'Events', segment: 'events', path: appRoutes.ai.aiAgentEvents() },
-            { label: 'Functions', segment: 'functions', path: appRoutes.ai.aiAgentFunctions() },
+            {
+              label: 'Functions & MCP',
+              segment: 'functions',
+              path: appRoutes.ai.aiAgentFunctions(),
+            },
             { label: 'Learning', segment: 'learning-section', kind: 'section' },
             {
               label: 'Unanswered Questions',

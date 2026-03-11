@@ -85,7 +85,7 @@ function OverviewPage() {
   }
 
   const resolvedLowerMetrics = lowerMetrics.map((metric) =>
-    metric.title === 'Functions'
+    metric.title === 'Functions & MCP'
       ? { ...metric, countHref: appRoutes.ai.aiAgentFunctions(resolvedAiAgentId) }
       : metric.title === 'Learning'
         ? {

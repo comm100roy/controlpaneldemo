@@ -102,10 +102,10 @@ export const overviewPanels: Array<{
 
 export const lowerMetrics = [
   {
-    title: 'Functions',
+    title: 'Functions & MCP',
     value: 0,
-    description: 'Functions that the AI Agent executes to complete specific tasks.',
-    countLabel: 'Functions',
+    description: 'Functions and MCP integrations that the AI Agent uses to complete tasks.',
+    countLabel: 'Functions & MCP',
     countHref: appRoutes.ai.aiAgentFunctions(),
   },
   {
@@ -333,6 +333,25 @@ export type FunctionOutputRow = {
   saveToVariable: string
 }
 
+export type FunctionSourceType = 'api' | 'mcp' | 'llm'
+
+export type ConnectedMcpFunction = {
+  id: string
+  name: string
+  description: string
+  enabled: boolean
+}
+
+export type ConnectedMcpServer = {
+  id: string
+  name: string
+  description: string
+  toolCount: number
+  status: string
+  authentication: string
+  functions: ConnectedMcpFunction[]
+}
+
 export type FunctionFormValues = {
   id: string
   name: string
@@ -345,6 +364,8 @@ export type FunctionFormValues = {
   body: string
   outputs: FunctionOutputRow[]
   usedInTopics: number
+  sourceType: FunctionSourceType
+  mcpServerName?: string
 }
 
 export const emptyFunctionFormValues: FunctionFormValues = {
@@ -359,56 +380,303 @@ export const emptyFunctionFormValues: FunctionFormValues = {
   body: '1',
   outputs: [],
   usedInTopics: 0,
+  sourceType: 'api',
 }
 
-export const functionDefinitions: FunctionFormValues[] = [
+const createFunctionDefinition = ({
+  id,
+  name,
+  description,
+  sourceType,
+  usedInTopics,
+  method = 'POST',
+  url,
+  authorizationRequired = sourceType !== 'llm',
+  mcpServerName,
+}: {
+  id: string
+  name: string
+  description: string
+  sourceType: FunctionSourceType
+  usedInTopics: number
+  method?: string
+  url: string
+  authorizationRequired?: boolean
+  mcpServerName?: string
+}): FunctionFormValues => ({
+  id,
+  name,
+  description,
+  authorizationRequired,
+  method,
+  url,
+  inputs: [],
+  headers: [],
+  body: sourceType === 'llm' ? '' : '{}',
+  outputs: [],
+  usedInTopics,
+  sourceType,
+  mcpServerName,
+})
+
+export const connectedMcpServers: ConnectedMcpServer[] = [
   {
-    id: 'get-order',
-    name: 'Get_order',
+    id: 'servicenow',
+    name: 'ServiceNow',
     description:
-      'Fetch order details and status information so the AI Agent can answer order-tracking questions.',
-    authorizationRequired: true,
+      'Retrieve Knowledge Base articles, check incident status, and create IT service requests for support automation.',
+    toolCount: 11,
+    status: 'Connected',
+    authentication: 'OAuth',
+    functions: [
+      {
+        id: 'search-incident',
+        name: 'search_incident',
+        description: 'Search for incident tickets based on keywords, numbers, or states.',
+        enabled: true,
+      },
+      {
+        id: 'create-incident',
+        name: 'create_incident',
+        description:
+          'Create a new support ticket to report a technical issue or request.',
+        enabled: true,
+      },
+      {
+        id: 'get-incident-details',
+        name: 'get_incident_details',
+        description: 'Retrieve comprehensive information for a specific incident record.',
+        enabled: false,
+      },
+      {
+        id: 'update-incident',
+        name: 'update_incident',
+        description:
+          'Modify an existing incident by changing its state or adding comments.',
+        enabled: false,
+      },
+      {
+        id: 'search-knowledge-base',
+        name: 'search_knowledge_base',
+        description:
+          'Search for help articles and documentation within the Knowledge Base.',
+        enabled: true,
+      },
+      {
+        id: 'search-user',
+        name: 'search_user',
+        description:
+          'Look up user records in the organization directory by name or department.',
+        enabled: false,
+      },
+      {
+        id: 'get-user-by-email',
+        name: 'get_user_by_email',
+        description:
+          'Fetch detailed profile information for a user using their email address.',
+        enabled: true,
+      },
+      {
+        id: 'create-task',
+        name: 'create_task',
+        description:
+          'Generate a general task or to-do item within the ServiceNow system.',
+        enabled: false,
+      },
+      {
+        id: 'update-task',
+        name: 'update_task',
+        description:
+          'Update the progress, assignment, or priority of an existing task.',
+        enabled: false,
+      },
+      {
+        id: 'list-my-incidents',
+        name: 'list_my_incidents',
+        description:
+          'List all active incidents associated with the current user.',
+        enabled: true,
+      },
+      {
+        id: 'get-sys-id',
+        name: 'get_sys_id',
+        description:
+          'Find the unique 32-character system identifier (sys_id) for any specific record.',
+        enabled: false,
+      },
+    ],
+  },
+  {
+    id: 'salesforce',
+    name: 'Salesforce',
+    description:
+      'Access customer CRM profiles, manage opportunities, and create support cases from AI Agent conversations.',
+    toolCount: 39,
+    status: 'Connected',
+    authentication: 'OAuth',
+    functions: [
+      {
+        id: 'search-contact',
+        name: 'search_contact',
+        description: 'Search for Salesforce contacts and leads by email, phone, or name.',
+        enabled: true,
+      },
+      {
+        id: 'get-account',
+        name: 'get_account',
+        description: 'Retrieve a Salesforce account record and its current owner details.',
+        enabled: true,
+      },
+      {
+        id: 'get-case',
+        name: 'get_case',
+        description: 'Return case details including status, priority, and recent updates.',
+        enabled: true,
+      },
+      {
+        id: 'create-case',
+        name: 'create_case',
+        description: 'Create a new Salesforce support case from the current conversation.',
+        enabled: false,
+      },
+      {
+        id: 'update-contact',
+        name: 'update_contact',
+        description: 'Update contact profile fields such as phone number or title.',
+        enabled: false,
+      },
+      {
+        id: 'list-opportunities',
+        name: 'list_opportunities',
+        description: 'List open opportunities for a Salesforce account or contact.',
+        enabled: false,
+      },
+    ],
+  },
+  {
+    id: 'hubspot',
+    name: 'HubSpot',
+    description:
+      'Sync contact details, track deal stages, and manage support tickets to align sales and support efforts.',
+    toolCount: 4,
+    status: 'Connected',
+    authentication: 'OAuth',
+    functions: [
+      {
+        id: 'search-contact',
+        name: 'search_contact',
+        description: 'Search for contacts in HubSpot by name, email, or phone.',
+        enabled: true,
+      },
+      {
+        id: 'create-contact',
+        name: 'create_contact',
+        description: 'Create a new contact record in HubSpot CRM.',
+        enabled: true,
+      },
+      {
+        id: 'update-contact',
+        name: 'update_contact',
+        description: 'Update an existing contact in HubSpot by their Contact ID.',
+        enabled: true,
+      },
+      {
+        id: 'get-contact-by-id',
+        name: 'get_contact_by_id',
+        description:
+          'Retrieve full details of a specific contact using their HubSpot Contact ID.',
+        enabled: false,
+      },
+    ],
+  },
+]
+
+export const functionDefinitions: FunctionFormValues[] = [
+  createFunctionDefinition({
+    id: 'search-contact',
+    name: 'search_contact',
+    description: 'Search for contacts in HubSpot by name, email, or phone.',
+    sourceType: 'mcp',
+    usedInTopics: 3,
+    method: 'MCP',
+    url: 'mcp://hubspot/search_contact',
+    mcpServerName: 'HubSpot',
+  }),
+  createFunctionDefinition({
+    id: 'create-contact',
+    name: 'create_contact',
+    description: 'Create a new contact record in HubSpot CRM.',
+    sourceType: 'mcp',
+    usedInTopics: 0,
+    method: 'MCP',
+    url: 'mcp://hubspot/create_contact',
+    mcpServerName: 'HubSpot',
+  }),
+  createFunctionDefinition({
+    id: 'update-contact',
+    name: 'update_contact',
+    description: 'Update an existing contact in HubSpot by their Contact ID.',
+    sourceType: 'mcp',
+    usedInTopics: 1,
+    method: 'MCP',
+    url: 'mcp://hubspot/update_contact',
+    mcpServerName: 'HubSpot',
+  }),
+  createFunctionDefinition({
+    id: 'information-classifier',
+    name: 'Information Classifier',
+    description: 'Classify information based on defined rules and structured output.',
+    sourceType: 'api',
+    usedInTopics: 2,
+    method: 'POST',
+    url: 'https://api.example.com/classify',
+  }),
+  createFunctionDefinition({
+    id: 'get-order',
+    name: 'Order_lookup',
+    description: 'Check order information.',
+    sourceType: 'api',
+    usedInTopics: 2,
     method: 'GET',
     url: 'https://api.example.com/orders/{!Input.orderId}',
-    inputs: [
-      {
-        name: 'orderId',
-        type: 'String',
-        isRequired: 'Yes',
-        description: 'The unique order number from the customer.',
-      },
-      {
-        name: 'email',
-        type: 'String',
-        isRequired: 'No',
-        description: 'Optional email used to confirm the order owner.',
-      },
-    ],
-    headers: [
-      {
-        key: 'Authorization',
-        value: 'Bearer {!Variable.Token}',
-      },
-      {
-        key: 'Content-Type',
-        value: 'application/json',
-      },
-    ],
-    body: '{\n  "orderId": "{!Input.orderId}",\n  "email": "{!Input.email}"\n}',
-    outputs: [
-      {
-        responseKey: 'status',
-        description: 'Current order status returned by the API.',
-        saveToVariable: 'orderStatus',
-      },
-      {
-        responseKey: 'trackingNumber',
-        description: 'Tracking number for shipped orders.',
-        saveToVariable: 'trackingNumber',
-      },
-    ],
-    usedInTopics: 0,
-  },
+  }),
+  createFunctionDefinition({
+    id: 'extract-information',
+    name: 'Extract_Information',
+    description: 'Extract structured entity information from free-form user input.',
+    sourceType: 'api',
+    usedInTopics: 1,
+    method: 'POST',
+    url: 'https://api.example.com/extract-information',
+  }),
+  createFunctionDefinition({
+    id: 'bot-subscription',
+    name: 'bot_subscription',
+    description: 'Handle bot subscription requests and plan eligibility decisions.',
+    sourceType: 'llm',
+    usedInTopics: 3,
+    method: 'PROMPT',
+    url: 'llm://bot-subscription',
+  }),
+  createFunctionDefinition({
+    id: 'get-contact-by-id',
+    name: 'get_contact_by_id',
+    description: 'Retrieve full details of a specific contact using their HubSpot Contact ID.',
+    sourceType: 'mcp',
+    usedInTopics: 2,
+    method: 'MCP',
+    url: 'mcp://hubspot/get_contact_by_id',
+    mcpServerName: 'HubSpot',
+  }),
+  createFunctionDefinition({
+    id: 'check-weather-information',
+    name: 'check_weather_information',
+    description: 'Get local weather data and summarize it for visitors.',
+    sourceType: 'llm',
+    usedInTopics: 1,
+    method: 'PROMPT',
+    url: 'llm://check-weather-information',
+  }),
 ]
 
 export const functionRows: InstructionRow[] = functionDefinitions.map((definition) => ({
