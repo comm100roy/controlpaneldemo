@@ -53,6 +53,7 @@ Important behavior:
 ## Mock API architecture
 
 - MSW bootstrap: `src/mocks/browser.ts`
+- API design guide: `API-Design.md`
 - Registered handlers: `src/mocks/handlers/index.ts`
 - Main mock domains:
   - `src/mocks/handlers/aiAgents.ts`
