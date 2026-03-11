@@ -46,6 +46,7 @@ Notes:
 Important behavior:
 
 - The app is site-prefixed. Canonical URLs are under `/ui/:siteId/...`.
+- All API have prefix `/api`.
 - Route generation should go through helpers in `src/data/routes.ts`. Do not hardcode AI paths unless there is a strong reason.
 - `BrowserRouter` uses `basename={import.meta.env.BASE_URL}`.
 - Vite base path is adjusted for GitHub Pages in `vite.config.ts`.
